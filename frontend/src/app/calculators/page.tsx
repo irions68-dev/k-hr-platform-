@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatusBadge from "@/components/StatusBadge";
+import CurrencyInput from "@/components/CurrencyInput";
 
 const INDUSTRIES = ["제조업", "건설업", "도소매업", "서비스업"];
 
@@ -97,7 +98,7 @@ function SeveranceCalculator() {
           <Input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} />
         </Field>
         <Field label="평균임금(1일분)">
-          <Input type="number" value={wage} onChange={(e) => setWage(e.target.value)} />
+          <CurrencyInput value={wage} onChange={setWage} />
         </Field>
       </div>
       <Button size="sm" onClick={calculate}>계산</Button>
@@ -163,7 +164,7 @@ function OvertimeCalculator() {
   return (
     <ToolCard title="연장·야간·휴일수당 계산">
       <Field label="통상시급">
-        <Input type="number" value={hourlyWage} onChange={(e) => setHourlyWage(e.target.value)} />
+        <CurrencyInput value={hourlyWage} onChange={setHourlyWage} />
       </Field>
       <div className="flex gap-2">
         <Field label="연장(h)">
@@ -211,7 +212,7 @@ function ProratedInsuranceCalculator() {
     <ToolCard title="4대보험 중도정산(일할계산)">
       <div className="flex gap-2">
         <Field label="월 기준소득">
-          <Input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
+          <CurrencyInput value={income} onChange={setIncome} />
         </Field>
         <Field label="업종">
           <select
@@ -337,7 +338,7 @@ function WeeklyHolidayPayCalculator() {
           <Input type="number" value={dailyHours} onChange={(e) => setDailyHours(e.target.value)} />
         </Field>
         <Field label="시급">
-          <Input type="number" value={hourlyWage} onChange={(e) => setHourlyWage(e.target.value)} />
+          <CurrencyInput value={hourlyWage} onChange={setHourlyWage} />
         </Field>
       </div>
       <label className="flex items-center gap-2 text-xs">
@@ -383,13 +384,13 @@ function ComprehensiveWageAdequacyCalculator() {
     <ToolCard title="포괄임금제 적정성 검토 (사무직)">
       <div className="flex gap-2">
         <Field label="포괄임금 내 연장수당">
-          <Input type="number" value={includedPay} onChange={(e) => setIncludedPay(e.target.value)} />
+          <CurrencyInput value={includedPay} onChange={setIncludedPay} />
         </Field>
         <Field label="실제 월 연장시간">
           <Input type="number" value={actualHours} onChange={(e) => setActualHours(e.target.value)} />
         </Field>
         <Field label="시급">
-          <Input type="number" value={hourlyWage} onChange={(e) => setHourlyWage(e.target.value)} />
+          <CurrencyInput value={hourlyWage} onChange={setHourlyWage} />
         </Field>
       </div>
       <Button size="sm" onClick={calculate}>검토</Button>

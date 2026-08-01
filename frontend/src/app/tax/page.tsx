@@ -4,9 +4,9 @@ import { useState } from "react";
 import { apiPost } from "@/lib/api";
 import type { FourInsurancesResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import CurrencyInput from "@/components/CurrencyInput";
 import {
   Select,
   SelectContent,
@@ -51,12 +51,7 @@ export default function TaxPage() {
           <form onSubmit={calculate} className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <Label>기준소득월액 (원)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={income}
-                onChange={(e) => setIncome(e.target.value)}
-              />
+              <CurrencyInput value={income} onChange={setIncome} />
             </div>
             <div className="flex flex-col gap-1">
               <Label>업종</Label>
