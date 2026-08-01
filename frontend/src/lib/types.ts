@@ -111,3 +111,24 @@ export interface MonthlyHourExemptionResult {
   exempt_from_pension_and_health_insurance: boolean;
   reason: string;
 }
+
+export interface WeeklyHolidayPayResult {
+  eligible: boolean;
+  pay: number;
+  reason: string;
+}
+
+export interface ComprehensiveWageAdequacyResult {
+  required_overtime_pay: number;
+  included_overtime_pay: number;
+  shortfall: number;
+  adequate: boolean;
+  status: RiskStatus;
+  disclaimer: string;
+}
+
+export interface SupervisoryStatusResult {
+  status: RiskStatus;
+  reason: string;
+  night_premium_note: string;
+}

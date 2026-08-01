@@ -37,6 +37,9 @@ OVERTIME_PREMIUM_RATE = 0.5  # 연장·야간근로 가산율
 HOLIDAY_PREMIUM_RATE = 0.5  # 휴일근로 8시간 이내 가산율
 HOLIDAY_OVER_8H_PREMIUM_RATE = 1.0  # 휴일근로 8시간 초과분 가산율
 
+WEEKLY_HOLIDAY_MIN_HOURS = 15  # 주휴수당 지급을 위한 최소 주 소정근로시간
+WEEKLY_HOLIDAY_MAX_DAILY_HOURS = 8  # 주휴수당 산정 시 1일 근로시간 인정 상한
+
 
 def check_dispatch_expiration(
     contract_start_date: date, reference_date: date | None = None
@@ -186,6 +189,13 @@ def assess_disguised_contracting_risk(factors: DisguisedContractingFactors) -> d
     }
 
 
+NIGHT_PREMIUM_NOTE = (
+    "감단(감시·단속적) 승인을 받아도 근로시간·휴게·휴일 규정만 적용제외될 뿐, "
+    "야간근로(22:00~06:00) 가산수당(통상임금의 50%)은 별도로 지급해야 한다 "
+    "(법제처 법령해석, 근로기준법 제56조는 제63조 적용제외 대상이 아님)."
+)
+
+
 def check_supervisory_intermittent_status(
     has_labor_ministry_approval: bool,
     approval_expiry: date | None,
@@ -198,17 +208,20 @@ def check_supervisory_intermittent_status(
         return {
             "status": RiskStatus.CRITICAL,
             "reason": "고용노동부 감단 승인 이력 없음 - 근로시간·휴게·휴일 규정 적용제외 불가",
+            "night_premium_note": NIGHT_PREMIUM_NOTE,
         }
 
     if approval_expiry is not None and approval_expiry < today:
         return {
             "status": RiskStatus.CRITICAL,
             "reason": f"감단 승인 만료됨 (만료일: {approval_expiry.isoformat()})",
+            "night_premium_note": NIGHT_PREMIUM_NOTE,
         }
 
     return {
         "status": RiskStatus.NORMAL,
         "reason": "감단 승인 유효",
+        "night_premium_note": NIGHT_PREMIUM_NOTE,
     }
 
 
@@ -293,4 +306,71 @@ def calculate_overtime_premium(
         "night_pay": night_pay,
         "holiday_pay": holiday_pay,
         "total_premium_pay": overtime_pay + night_pay + holiday_pay,
+    }
+
+
+def calculate_weekly_holiday_pay(
+    weekly_scheduled_hours: float,
+    daily_scheduled_hours: float,
+    hourly_wage: float,
+    full_attendance: bool = True,
+) -> dict:
+    """주휴수당을 계산한다 (근로기준법 제55조).
+
+    지급 요건: 1주 소정근로시간 15시간 이상 + 소정근로일 개근.
+    금액: min(1일 소정근로시간, 8시간) × 시급. 물류·서비스직의 일용·단시간
+    근로자에게 가장 자주 발생하는 문의 중 하나다.
+    """
+    if weekly_scheduled_hours < WEEKLY_HOLIDAY_MIN_HOURS:
+        return {
+            "eligible": False,
+            "pay": 0,
+            "reason": (
+                f"주 소정근로시간 {weekly_scheduled_hours}시간이 "
+                f"{WEEKLY_HOLIDAY_MIN_HOURS}시간 미만 - 지급 대상 아님"
+            ),
+        }
+
+    if not full_attendance:
+        return {
+            "eligible": False,
+            "pay": 0,
+            "reason": "소정근로일 개근하지 않음 - 지급 대상 아님",
+        }
+
+    recognized_hours = min(daily_scheduled_hours, WEEKLY_HOLIDAY_MAX_DAILY_HOURS)
+    pay = round(recognized_hours * hourly_wage)
+
+    return {
+        "eligible": True,
+        "pay": pay,
+        "reason": "주 15시간 이상 + 개근 - 지급 대상",
+    }
+
+
+def assess_comprehensive_wage_adequacy(
+    included_overtime_pay: float,
+    actual_overtime_hours: float,
+    hourly_wage: float,
+) -> dict:
+    """포괄임금제에 포함된 연장근로수당이 실제 연장근로시간을 커버하는지 검토한다.
+
+    포괄임금제 자체가 위법은 아니지만, 실제 연장근로에 대한 법정 가산수당보다
+    적게 포함되어 있으면 그 차액은 별도로 지급해야 한다(대법원 판례상
+    포괄임금 약정도 근로기준법 최저기준을 하회할 수 없음).
+    """
+    required_overtime_pay = round(hourly_wage * (1 + OVERTIME_PREMIUM_RATE) * actual_overtime_hours)
+    shortfall = max(required_overtime_pay - included_overtime_pay, 0)
+
+    return {
+        "required_overtime_pay": required_overtime_pay,
+        "included_overtime_pay": included_overtime_pay,
+        "shortfall": shortfall,
+        "adequate": shortfall == 0,
+        "status": RiskStatus.CRITICAL if shortfall > 0 else RiskStatus.NORMAL,
+        "disclaimer": (
+            "실제 연장근로시간 산정 기준(포괄임금 계약서상 가정 연장시간 vs "
+            "실근무기록)에 따라 결과가 달라질 수 있으므로, 임금대장·근태기록과 "
+            "대조해 확인이 필요합니다."
+        ),
     }

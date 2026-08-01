@@ -13,10 +13,14 @@ from app.engines import rule_checker
 from app.schemas.calculators import (
     AnnualLeaveRequest,
     AnnualLeaveResponse,
+    ComprehensiveWageAdequacyRequest,
+    ComprehensiveWageAdequacyResponse,
     OvertimePremiumRequest,
     OvertimePremiumResponse,
     SeverancePayRequest,
     SeverancePayResponse,
+    WeeklyHolidayPayRequest,
+    WeeklyHolidayPayResponse,
 )
 
 router = APIRouter(prefix="/calculators", tags=["calculators"])
@@ -43,4 +47,25 @@ def overtime_premium(payload: OvertimePremiumRequest) -> dict:
         overtime_hours=payload.overtime_hours,
         night_hours=payload.night_hours,
         holiday_hours=payload.holiday_hours,
+    )
+
+
+@router.post("/weekly-holiday-pay", response_model=WeeklyHolidayPayResponse)
+def weekly_holiday_pay(payload: WeeklyHolidayPayRequest) -> dict:
+    return rule_checker.calculate_weekly_holiday_pay(
+        payload.weekly_scheduled_hours,
+        payload.daily_scheduled_hours,
+        payload.hourly_wage,
+        full_attendance=payload.full_attendance,
+    )
+
+
+@router.post(
+    "/comprehensive-wage-adequacy", response_model=ComprehensiveWageAdequacyResponse
+)
+def comprehensive_wage_adequacy(payload: ComprehensiveWageAdequacyRequest) -> dict:
+    return rule_checker.assess_comprehensive_wage_adequacy(
+        payload.included_overtime_pay,
+        payload.actual_overtime_hours,
+        payload.hourly_wage,
     )

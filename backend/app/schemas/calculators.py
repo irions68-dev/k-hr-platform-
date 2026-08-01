@@ -4,6 +4,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
+from app.engines.rule_checker import RiskStatus
+
 
 class SeverancePayRequest(BaseModel):
     hire_date: date
@@ -42,3 +44,31 @@ class OvertimePremiumResponse(BaseModel):
     night_pay: int
     holiday_pay: int
     total_premium_pay: int
+
+
+class WeeklyHolidayPayRequest(BaseModel):
+    weekly_scheduled_hours: float = Field(gt=0)
+    daily_scheduled_hours: float = Field(gt=0)
+    hourly_wage: float = Field(gt=0)
+    full_attendance: bool = True
+
+
+class WeeklyHolidayPayResponse(BaseModel):
+    eligible: bool
+    pay: int
+    reason: str
+
+
+class ComprehensiveWageAdequacyRequest(BaseModel):
+    included_overtime_pay: float = Field(ge=0)
+    actual_overtime_hours: float = Field(ge=0)
+    hourly_wage: float = Field(gt=0)
+
+
+class ComprehensiveWageAdequacyResponse(BaseModel):
+    required_overtime_pay: int
+    included_overtime_pay: float
+    shortfall: int
+    adequate: bool
+    status: RiskStatus
+    disclaimer: str

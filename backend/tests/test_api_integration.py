@@ -96,6 +96,44 @@ def test_overtime_premium_calculator(client):
     assert resp.json()["overtime_pay"] == round(10000 * 1.5 * 5)
 
 
+def test_weekly_holiday_pay_calculator(client):
+    resp = client.post(
+        "/calculators/weekly-holiday-pay",
+        json={
+            "weekly_scheduled_hours": 20,
+            "daily_scheduled_hours": 4,
+            "hourly_wage": 10000,
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["eligible"] is True
+    assert body["pay"] == 40000
+
+
+def test_comprehensive_wage_adequacy_calculator(client):
+    resp = client.post(
+        "/calculators/comprehensive-wage-adequacy",
+        json={
+            "included_overtime_pay": 50000,
+            "actual_overtime_hours": 10,
+            "hourly_wage": 10000,
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["adequate"] is False
+    assert body["shortfall"] > 0
+
+
+def test_supervisory_status_includes_night_premium_note(client):
+    resp = client.post(
+        "/risk/supervisory-status", json={"has_labor_ministry_approval": True}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["night_premium_note"]
+
+
 def test_four_insurances_endpoint(client):
     resp = client.post(
         "/tax/four-insurances",

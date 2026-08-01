@@ -4,12 +4,15 @@ import { useState } from "react";
 import { apiPost } from "@/lib/api";
 import type {
   AnnualLeaveResult,
+  ComprehensiveWageAdequacyResult,
   DispatchExpirationResult,
   MonthlyHourExemptionResult,
   OvertimePremiumResult,
   ProratedInsuranceResult,
   RiskScoreResult,
   SeverancePayResult,
+  SupervisoryStatusResult,
+  WeeklyHolidayPayResult,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +37,12 @@ export default function CalculatorsPage() {
         <SeveranceCalculator />
         <AnnualLeaveCalculator />
         <OvertimeCalculator />
+        <WeeklyHolidayPayCalculator />
+        <ComprehensiveWageAdequacyCalculator />
         <ProratedInsuranceCalculator />
         <DispatchExpirationCalculator />
         <MonthlyHourExemptionCalculator />
+        <SupervisoryStatusCalculator />
         <DisguisedContractingCalculator />
         <FreelancerRiskCalculator />
       </div>
@@ -295,6 +301,147 @@ function MonthlyHourExemptionCalculator() {
       {result && (
         <ResultBox>
           <p>{result.reason}</p>
+        </ResultBox>
+      )}
+    </ToolCard>
+  );
+}
+
+function WeeklyHolidayPayCalculator() {
+  const [weeklyHours, setWeeklyHours] = useState("20");
+  const [dailyHours, setDailyHours] = useState("4");
+  const [hourlyWage, setHourlyWage] = useState("10000");
+  const [fullAttendance, setFullAttendance] = useState(true);
+  const [result, setResult] = useState<WeeklyHolidayPayResult | null>(null);
+
+  const calculate = async () => {
+    const data = await apiPost<WeeklyHolidayPayResult>(
+      "/calculators/weekly-holiday-pay",
+      {
+        weekly_scheduled_hours: Number(weeklyHours),
+        daily_scheduled_hours: Number(dailyHours),
+        hourly_wage: Number(hourlyWage),
+        full_attendance: fullAttendance,
+      }
+    );
+    setResult(data);
+  };
+
+  return (
+    <ToolCard title="주휴수당 계산 (물류·서비스 단시간직 필수)">
+      <div className="flex gap-2">
+        <Field label="주 소정근로시간">
+          <Input type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} />
+        </Field>
+        <Field label="1일 소정근로시간">
+          <Input type="number" value={dailyHours} onChange={(e) => setDailyHours(e.target.value)} />
+        </Field>
+        <Field label="시급">
+          <Input type="number" value={hourlyWage} onChange={(e) => setHourlyWage(e.target.value)} />
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={fullAttendance}
+          onChange={(e) => setFullAttendance(e.target.checked)}
+        />
+        소정근로일 개근함
+      </label>
+      <Button size="sm" onClick={calculate}>계산</Button>
+      {result && (
+        <ResultBox>
+          <p className="text-lg font-bold">
+            {result.eligible ? `${result.pay.toLocaleString()}원` : "지급 대상 아님"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{result.reason}</p>
+        </ResultBox>
+      )}
+    </ToolCard>
+  );
+}
+
+function ComprehensiveWageAdequacyCalculator() {
+  const [includedPay, setIncludedPay] = useState("500000");
+  const [actualHours, setActualHours] = useState("40");
+  const [hourlyWage, setHourlyWage] = useState("10000");
+  const [result, setResult] = useState<ComprehensiveWageAdequacyResult | null>(null);
+
+  const calculate = async () => {
+    const data = await apiPost<ComprehensiveWageAdequacyResult>(
+      "/calculators/comprehensive-wage-adequacy",
+      {
+        included_overtime_pay: Number(includedPay),
+        actual_overtime_hours: Number(actualHours),
+        hourly_wage: Number(hourlyWage),
+      }
+    );
+    setResult(data);
+  };
+
+  return (
+    <ToolCard title="포괄임금제 적정성 검토 (사무직)">
+      <div className="flex gap-2">
+        <Field label="포괄임금 내 연장수당">
+          <Input type="number" value={includedPay} onChange={(e) => setIncludedPay(e.target.value)} />
+        </Field>
+        <Field label="실제 월 연장시간">
+          <Input type="number" value={actualHours} onChange={(e) => setActualHours(e.target.value)} />
+        </Field>
+        <Field label="시급">
+          <Input type="number" value={hourlyWage} onChange={(e) => setHourlyWage(e.target.value)} />
+        </Field>
+      </div>
+      <Button size="sm" onClick={calculate}>검토</Button>
+      {result && (
+        <ResultBox>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold">
+              {result.adequate ? "적정" : `${result.shortfall.toLocaleString()}원 부족`}
+            </span>
+            <StatusBadge status={result.status} />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{result.disclaimer}</p>
+        </ResultBox>
+      )}
+    </ToolCard>
+  );
+}
+
+function SupervisoryStatusCalculator() {
+  const [hasApproval, setHasApproval] = useState(true);
+  const [expiry, setExpiry] = useState("");
+  const [result, setResult] = useState<SupervisoryStatusResult | null>(null);
+
+  const calculate = async () => {
+    const data = await apiPost<SupervisoryStatusResult>("/risk/supervisory-status", {
+      has_labor_ministry_approval: hasApproval,
+      approval_expiry: expiry || null,
+    });
+    setResult(data);
+  };
+
+  return (
+    <ToolCard title="감시·단속적 근로 승인 확인">
+      <label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={hasApproval}
+          onChange={(e) => setHasApproval(e.target.checked)}
+        />
+        고용노동부 감단 승인 있음
+      </label>
+      <Field label="승인 만료일(선택)">
+        <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+      </Field>
+      <Button size="sm" onClick={calculate}>확인</Button>
+      {result && (
+        <ResultBox>
+          <div className="flex items-center gap-2">
+            <span className="font-bold">{result.reason}</span>
+            <StatusBadge status={result.status} />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{result.night_premium_note}</p>
         </ResultBox>
       )}
     </ToolCard>

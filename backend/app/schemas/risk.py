@@ -51,6 +51,7 @@ class SupervisoryStatusRequest(BaseModel):
 class SupervisoryStatusResponse(BaseModel):
     status: RiskStatus
     reason: str
+    night_premium_note: str
 
 
 class MonthlyHourExemptionRequest(BaseModel):

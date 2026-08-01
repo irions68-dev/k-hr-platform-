@@ -197,3 +197,54 @@ class TestOvertimePremium:
         assert result["total_premium_pay"] == (
             result["overtime_pay"] + result["night_pay"] + result["holiday_pay"]
         )
+
+
+class TestWeeklyHolidayPay:
+    def test_below_15_hours_not_eligible(self):
+        result = rule_checker.calculate_weekly_holiday_pay(14, 3, 10000)
+        assert result["eligible"] is False
+        assert result["pay"] == 0
+
+    def test_not_full_attendance_not_eligible(self):
+        result = rule_checker.calculate_weekly_holiday_pay(
+            20, 4, 10000, full_attendance=False
+        )
+        assert result["eligible"] is False
+        assert result["pay"] == 0
+
+    def test_eligible_pays_daily_hours_times_wage(self):
+        result = rule_checker.calculate_weekly_holiday_pay(20, 4, 10000)
+        assert result["eligible"] is True
+        assert result["pay"] == 40000
+
+    def test_daily_hours_capped_at_8(self):
+        result = rule_checker.calculate_weekly_holiday_pay(45, 9, 10000)
+        assert result["pay"] == 80000
+
+
+class TestComprehensiveWageAdequacy:
+    def test_adequate_when_included_covers_required(self):
+        required = round(10000 * 1.5 * 10)
+        result = rule_checker.assess_comprehensive_wage_adequacy(
+            required, actual_overtime_hours=10, hourly_wage=10000
+        )
+        assert result["adequate"] is True
+        assert result["shortfall"] == 0
+        assert result["status"] == RiskStatus.NORMAL
+
+    def test_inadequate_when_included_is_less_than_required(self):
+        result = rule_checker.assess_comprehensive_wage_adequacy(
+            50000, actual_overtime_hours=10, hourly_wage=10000
+        )
+        required = round(10000 * 1.5 * 10)
+        assert result["adequate"] is False
+        assert result["shortfall"] == required - 50000
+        assert result["status"] == RiskStatus.CRITICAL
+
+
+class TestSupervisoryStatusNightPremiumNote:
+    def test_note_present_regardless_of_approval(self):
+        with_approval = rule_checker.check_supervisory_intermittent_status(True, None)
+        without_approval = rule_checker.check_supervisory_intermittent_status(False, None)
+        assert with_approval["night_premium_note"]
+        assert without_approval["night_premium_note"]
