@@ -1,23 +1,6 @@
 from datetime import date, timedelta
 
 
-def test_dispatch_worker_crud_and_risk(client):
-    payload = {
-        "name": "홍길동",
-        "position": "생산직",
-        "contract_start_date": (date.today() - timedelta(days=700)).isoformat(),
-    }
-    create_resp = client.post("/dispatch-workers", json=payload)
-    assert create_resp.status_code == 200
-
-    list_resp = client.get("/dispatch-workers")
-    assert list_resp.status_code == 200
-    workers = list_resp.json()
-    assert len(workers) == 1
-    assert workers[0]["d_day"] == 30
-    assert workers[0]["status"] == "critical"
-
-
 def test_case_note_create_and_search(client):
     payload = {
         "question": "위장도급 판단기준이 뭐야?",
@@ -61,32 +44,56 @@ def test_study_review_flow(client):
     assert missing_resp.status_code == 404
 
 
-def test_morning_brief_aggregates_risk_and_study(client):
-    client.post(
-        "/dispatch-workers",
-        json={
-            "name": "김파견",
-            "position": "사무직",
-            "contract_start_date": (date.today() - timedelta(days=650)).isoformat(),
-        },
-    )
-    client.post(
-        "/dispatch-workers",
-        json={
-            "name": "이정상",
-            "position": "사무직",
-            "contract_start_date": date.today().isoformat(),
-        },
-    )
+def test_morning_brief_aggregates_due_study_items(client):
     client.post("/study/review-items", json={"keyword": "복습항목"})
 
     brief_resp = client.get("/brief/morning")
     assert brief_resp.status_code == 200
     brief = brief_resp.json()
-    assert brief["total_workers"] == 2
-    assert brief["at_risk_count"] == 1
-    assert brief["at_risk_workers"][0]["name"] == "김파견"
     assert brief["due_study_count"] == 1
+    assert brief["due_study_items"][0]["keyword"] == "복습항목"
+
+
+def test_dispatch_expiration_calculator_is_stateless(client):
+    contract_start = date.today() - timedelta(days=700)
+    resp = client.post(
+        "/risk/dispatch-expiration",
+        json={"contract_start_date": contract_start.isoformat()},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["d_day"] == 30
+    assert body["status"] == "critical"
+
+
+def test_severance_pay_calculator(client):
+    hire_date = date.today() - timedelta(days=730)
+    resp = client.post(
+        "/calculators/severance-pay",
+        json={"hire_date": hire_date.isoformat(), "average_daily_wage": 100000},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["eligible"] is True
+    assert body["severance_pay"] > 0
+
+
+def test_annual_leave_calculator(client):
+    hire_date = date.today() - timedelta(days=400)
+    resp = client.post(
+        "/calculators/annual-leave", json={"hire_date": hire_date.isoformat()}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["granted_days"] == 15
+
+
+def test_overtime_premium_calculator(client):
+    resp = client.post(
+        "/calculators/overtime-premium",
+        json={"hourly_wage": 10000, "overtime_hours": 5},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["overtime_pay"] == round(10000 * 1.5 * 5)
 
 
 def test_four_insurances_endpoint(client):

@@ -1,16 +1,21 @@
+from datetime import date
+
 from app.engines.insurance_rates import (
     EmploymentInsuranceRates,
     HealthInsuranceRates,
     IndustrialAccidentRates,
+    InsuranceRateTable,
     NationalPensionRates,
     NonTaxableLimits,
 )
 from app.engines.tax_calculator import (
     AllowanceInput,
     calculate_employment_insurance,
+    calculate_four_insurances,
     calculate_health_insurance,
     calculate_industrial_accident_insurance,
     calculate_national_pension,
+    calculate_prorated_four_insurances,
     filter_non_taxable_allowances,
 )
 
@@ -84,3 +89,31 @@ class TestNonTaxableAllowances:
         assert result["non_taxable_meal"] == 200000
         assert result["non_taxable_vehicle"] == 200000
         assert result["total_non_taxable"] == 400000
+
+
+RATE_TABLE = InsuranceRateTable(
+    effective_date=date(2026, 1, 1),
+    national_pension=PENSION_RATES,
+    health_insurance=HEALTH_RATES,
+    employment_insurance=EMPLOYMENT_RATES,
+    industrial_accident=INDUSTRIAL_RATES,
+    non_taxable=NON_TAXABLE_LIMITS,
+)
+
+
+class TestProratedFourInsurances:
+    def test_full_month_matches_regular_calculation(self):
+        full = calculate_four_insurances(3000000, "제조업", RATE_TABLE)
+        prorated = calculate_prorated_four_insurances(3000000, "제조업", 30, 30, RATE_TABLE)
+        assert prorated["employee_total_premium"] == full["employee_total_premium"]
+
+    def test_half_month_is_roughly_half(self):
+        full = calculate_four_insurances(3000000, "제조업", RATE_TABLE)
+        prorated = calculate_prorated_four_insurances(3000000, "제조업", 15, 30, RATE_TABLE)
+        assert prorated["employee_total_premium"] == round(
+            full["employee_total_premium"] * 0.5
+        )
+
+    def test_response_includes_disclaimer(self):
+        prorated = calculate_prorated_four_insurances(3000000, "제조업", 15, 30, RATE_TABLE)
+        assert prorated["disclaimer"]

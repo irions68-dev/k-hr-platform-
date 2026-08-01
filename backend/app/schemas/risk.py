@@ -51,3 +51,28 @@ class SupervisoryStatusRequest(BaseModel):
 class SupervisoryStatusResponse(BaseModel):
     status: RiskStatus
     reason: str
+
+
+class MonthlyHourExemptionRequest(BaseModel):
+    monthly_hours: float = Field(gt=0)
+
+
+class MonthlyHourExemptionResponse(BaseModel):
+    monthly_hours: float
+    threshold_hours: float
+    exempt_from_pension_and_health_insurance: bool
+    reason: str
+
+
+class FreelancerMisclassificationRequest(BaseModel):
+    fixed_working_hours_and_place: bool
+    subject_to_direction_and_supervision: bool
+    cannot_delegate_or_use_substitute: bool
+    exclusive_and_continuous_engagement: bool
+
+
+class FreelancerMisclassificationResponse(BaseModel):
+    score: int
+    max_score: int
+    status: RiskStatus
+    disclaimer: str

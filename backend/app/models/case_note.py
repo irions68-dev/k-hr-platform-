@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.constants import DEFAULT_USER
 from app.core.db import Base
-from app.models.dispatch_worker import DEFAULT_USER
 
 REFERENCE_SEPARATOR = "|"
 

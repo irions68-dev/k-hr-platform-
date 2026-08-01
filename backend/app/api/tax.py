@@ -5,7 +5,11 @@ from datetime import date
 from fastapi import APIRouter
 
 from app.engines import insurance_rates, tax_calculator
-from app.schemas.tax import FourInsurancesRequest, NonTaxableFilterRequest
+from app.schemas.tax import (
+    FourInsurancesRequest,
+    NonTaxableFilterRequest,
+    ProratedInsuranceRequest,
+)
 
 router = APIRouter(prefix="/tax", tags=["tax"])
 
@@ -29,4 +33,17 @@ def non_taxable_filter(payload: NonTaxableFilterRequest) -> dict:
     )
     return tax_calculator.filter_non_taxable_allowances(
         payload.gross_salary, allowances, rate_table.non_taxable
+    )
+
+
+@router.post("/prorated-insurance")
+def prorated_insurance(payload: ProratedInsuranceRequest) -> dict:
+    reference_date = payload.reference_date or date.today()
+    rate_table = insurance_rates.load_rates_for_date(reference_date)
+    return tax_calculator.calculate_prorated_four_insurances(
+        payload.monthly_base_income,
+        payload.industry,
+        payload.days_worked,
+        payload.days_in_month,
+        rate_table,
     )

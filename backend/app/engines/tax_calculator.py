@@ -91,6 +91,42 @@ def calculate_four_insurances(
     }
 
 
+def calculate_prorated_four_insurances(
+    monthly_base_income: float,
+    industry: str,
+    days_worked: int,
+    days_in_month: int,
+    rate_table: InsuranceRateTable,
+) -> dict:
+    """월 중도 입사·퇴사 시 보험료를 근무일수 비례로 일할계산한다(근사치).
+
+    주의: 실제로는 국민연금·건강보험은 원칙적으로 월 단위 부과이고 일할계산을
+    적용하지 않는 경우가 많으며, 보험 종류별로 취득/상실 시점 처리 규정이
+    다르다. 이 함수는 전화 응대 시 즉시 답할 수 있는 근사치를 제공할 뿐이며,
+    정확한 금액은 4대사회보험 정보연계센터 확인이 필요하다.
+    """
+    full = calculate_four_insurances(monthly_base_income, industry, rate_table)
+    ratio = days_worked / days_in_month
+
+    def scale(amount: int) -> int:
+        return round(amount * ratio)
+
+    return {
+        "days_worked": days_worked,
+        "days_in_month": days_in_month,
+        "proration_ratio": round(ratio, 4),
+        "national_pension_premium": scale(full["national_pension"]["premium"]),
+        "health_insurance_premium": scale(full["health_insurance"]["total_premium"]),
+        "employment_insurance_premium": scale(full["employment_insurance"]["premium"]),
+        "employee_total_premium": scale(full["employee_total_premium"]),
+        "disclaimer": (
+            "근무일수 비례 근사치입니다. 국민연금·건강보험은 실제로 월 단위 "
+            "부과 원칙이 적용되는 경우가 많으므로, 정확한 금액은 공단 확인이 "
+            "필요합니다."
+        ),
+    }
+
+
 @dataclass
 class AllowanceInput:
     meal_allowance: float = 0

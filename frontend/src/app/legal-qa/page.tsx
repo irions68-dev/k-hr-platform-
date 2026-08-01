@@ -13,14 +13,25 @@ interface ChatEntry {
   response: LegalQaResponse;
 }
 
+const FAQ_QUESTIONS = [
+  "퇴직금은 얼마나 받나요?",
+  "연차는 며칠 생기나요?",
+  "야근수당은 어떻게 계산하나요?",
+  "파견 기간은 최대 몇 년인가요?",
+  "해고 통보는 며칠 전에 해야 하나요?",
+  "퇴직금 중간정산이 가능한가요?",
+  "휴일에 일하면 수당이 얼마나 붙나요?",
+  "4대보험은 왜 이렇게 떼나요?",
+];
+
 export default function LegalQaPage() {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<ChatEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ask = async () => {
-    const q = question.trim();
+  const ask = async (overrideQuestion?: string) => {
+    const q = (overrideQuestion ?? question).trim();
     if (!q) return;
     setLoading(true);
     setError(null);
@@ -41,16 +52,32 @@ export default function LegalQaPage() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
-      <h1 className="text-2xl font-bold">법령 Q&A</h1>
+      <h1 className="text-2xl font-bold">법령 Q&A · 전화응대 헬프데스크</h1>
       <p className="text-sm text-muted-foreground">
-        샘플 법령 코퍼스(6개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
+        샘플 법령 코퍼스(10개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
       </p>
+
+      {history.length === 0 && (
+        <div className="flex flex-wrap gap-2">
+          {FAQ_QUESTIONS.map((q) => (
+            <button
+              key={q}
+              type="button"
+              disabled={loading}
+              onClick={() => ask(q)}
+              className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
 
       <Card className="flex-1 overflow-y-auto">
         <CardContent>
           {history.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              예: &quot;파견 근로자를 얼마나 오래 쓸 수 있어?&quot;
+              위 자주 묻는 질문을 클릭하거나 직접 질문을 입력하세요.
             </p>
           ) : (
             <div className="flex flex-col gap-6">

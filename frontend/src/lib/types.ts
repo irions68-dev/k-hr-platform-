@@ -1,16 +1,5 @@
 export type RiskStatus = "normal" | "warning" | "critical";
 
-export interface DispatchWorkerRisk {
-  id: number;
-  name: string;
-  position: string;
-  contract_start_date: string;
-  created_at: string;
-  limit_date: string;
-  d_day: number;
-  status: RiskStatus;
-}
-
 export interface StudyReviewItem {
   id: number;
   case_note_id: number | null;
@@ -24,10 +13,7 @@ export interface StudyReviewItem {
 
 export interface MorningBrief {
   brief_date: string;
-  at_risk_workers: DispatchWorkerRisk[];
   due_study_items: StudyReviewItem[];
-  total_workers: number;
-  at_risk_count: number;
   due_study_count: number;
 }
 
@@ -72,4 +58,56 @@ export interface FourInsurancesResult {
     employer_only: boolean;
   };
   employee_total_premium: number;
+}
+
+export interface DispatchExpirationResult {
+  limit_date: string;
+  d_day: number;
+  status: RiskStatus;
+}
+
+export interface SeverancePayResult {
+  eligible: boolean;
+  tenure_days: number;
+  severance_pay: number;
+  reason: string;
+}
+
+export interface AnnualLeaveResult {
+  tenure_days: number;
+  years_of_service: number | null;
+  granted_days: number;
+  basis: string;
+}
+
+export interface OvertimePremiumResult {
+  overtime_pay: number;
+  night_pay: number;
+  holiday_pay: number;
+  total_premium_pay: number;
+}
+
+export interface ProratedInsuranceResult {
+  days_worked: number;
+  days_in_month: number;
+  proration_ratio: number;
+  national_pension_premium: number;
+  health_insurance_premium: number;
+  employment_insurance_premium: number;
+  employee_total_premium: number;
+  disclaimer: string;
+}
+
+export interface RiskScoreResult {
+  score: number;
+  max_score: number;
+  status: RiskStatus;
+  disclaimer: string;
+}
+
+export interface MonthlyHourExemptionResult {
+  monthly_hours: number;
+  threshold_hours: number;
+  exempt_from_pension_and_health_insurance: boolean;
+  reason: string;
 }

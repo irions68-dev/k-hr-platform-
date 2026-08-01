@@ -6,12 +6,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/", label: "대시보드" },
-  { href: "/dispatch-workers", label: "파견근로자" },
+  { href: "/", label: "홈" },
   { href: "/legal-qa", label: "법령 Q&A" },
+  { href: "/calculators", label: "빠른 계산기" },
+  { href: "/tax", label: "4대보험 계산" },
   { href: "/cases", label: "사례노트" },
   { href: "/study", label: "수험학습" },
-  { href: "/tax", label: "4대보험 계산" },
 ];
 
 export default function NavBar() {

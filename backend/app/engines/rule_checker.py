@@ -24,6 +24,19 @@ STATUTORY_WEEKLY_HOURS = 40
 MAX_EXTENSION_HOURS = 12
 WEEKLY_HOUR_LIMIT = STATUTORY_WEEKLY_HOURS + MAX_EXTENSION_HOURS  # 52
 
+MONTHLY_HOUR_EXEMPTION_THRESHOLD = 60  # 이 미만이면 4대보험(국민연금·건강보험) 적용제외 대상
+
+SEVERANCE_MINIMUM_TENURE_DAYS = 365  # 퇴직금은 계속근로 1년 이상만 지급의무
+SEVERANCE_ACCRUAL_DAYS = 30  # 평균임금 30일분
+
+ANNUAL_LEAVE_FIRST_YEAR_CAP = 11  # 1년 미만 근속자의 최대 연차(개근 월 1일씩)
+ANNUAL_LEAVE_BASE_DAYS = 15  # 1년 이상 근속자의 기본 연차
+ANNUAL_LEAVE_MAX_DAYS = 25  # 가산 포함 상한
+
+OVERTIME_PREMIUM_RATE = 0.5  # 연장·야간근로 가산율
+HOLIDAY_PREMIUM_RATE = 0.5  # 휴일근로 8시간 이내 가산율
+HOLIDAY_OVER_8H_PREMIUM_RATE = 1.0  # 휴일근로 8시간 초과분 가산율
+
 
 def check_dispatch_expiration(
     contract_start_date: date, reference_date: date | None = None
@@ -63,6 +76,66 @@ def check_weekly_hour_limit(weekly_hours: float) -> dict:
         "excess_hours": excess_hours,
         "exceeded": exceeded,
         "status": RiskStatus.CRITICAL if exceeded else RiskStatus.NORMAL,
+    }
+
+
+def check_monthly_hour_exemption(monthly_hours: float) -> dict:
+    """월 소정근로시간이 60시간 미만이면 국민연금·건강보험 적용제외 대상임을 안내한다."""
+    exempt = monthly_hours < MONTHLY_HOUR_EXEMPTION_THRESHOLD
+    return {
+        "monthly_hours": monthly_hours,
+        "threshold_hours": MONTHLY_HOUR_EXEMPTION_THRESHOLD,
+        "exempt_from_pension_and_health_insurance": exempt,
+        "reason": (
+            "월 소정근로시간 60시간 미만은 국민연금·건강보험 적용제외 대상"
+            if exempt
+            else "월 60시간 이상이므로 4대보험 가입대상"
+        ),
+    }
+
+
+@dataclass
+class FreelancerMisclassificationFactors:
+    """위장프리랜서(3.3% 사업소득 처리) 판단을 위한 체크리스트.
+
+    실질은 근로자인데 3.3% 사업소득으로 처리해 4대보험·근로기준법 적용을
+    회피하는 경우를 가려내기 위한 참고용 스코어링. 대법원 판례상 근로자성
+    판단은 계약형식이 아니라 실질(사용종속관계)을 기준으로 한다.
+    """
+
+    fixed_working_hours_and_place: bool  # 근무시간·장소가 지정되어 있는가
+    subject_to_direction_and_supervision: bool  # 업무수행 과정에서 지휘·감독을 받는가
+    cannot_delegate_or_use_substitute: bool  # 본인이 아닌 제3자에게 대체 수행시킬 수 없는가
+    exclusive_and_continuous_engagement: bool  # 특정 사업장에 전속적·계속적으로 종사하는가
+
+
+def assess_freelancer_misclassification_risk(
+    factors: FreelancerMisclassificationFactors,
+) -> dict:
+    """위장프리랜서(3.3%) 리스크를 체크리스트 기반으로 점수화한다."""
+    checks = [
+        factors.fixed_working_hours_and_place,
+        factors.subject_to_direction_and_supervision,
+        factors.cannot_delegate_or_use_substitute,
+        factors.exclusive_and_continuous_engagement,
+    ]
+    score = sum(checks)
+
+    if score >= 3:
+        status = RiskStatus.CRITICAL
+    elif score >= 1:
+        status = RiskStatus.WARNING
+    else:
+        status = RiskStatus.NORMAL
+
+    return {
+        "score": score,
+        "max_score": len(checks),
+        "status": status,
+        "disclaimer": (
+            "본 결과는 참고용 스코어링이며, 근로자성(위장프리랜서) 최종 판단은 "
+            "개별 사실관계 및 최신 판례 확인이 필요합니다."
+        ),
     }
 
 
@@ -136,4 +209,88 @@ def check_supervisory_intermittent_status(
     return {
         "status": RiskStatus.NORMAL,
         "reason": "감단 승인 유효",
+    }
+
+
+def calculate_severance_pay(average_daily_wage: float, tenure_days: int) -> dict:
+    """퇴직금을 계산한다 (근로기준법 - 평균임금 30일분 × 재직일수/365).
+
+    Args:
+        average_daily_wage: 퇴직 전 3개월 평균임금(1일분). 급여대장 등에서 산출된
+            값을 그대로 입력받는다 - 이 함수는 평균임금 자체를 산정하지 않는다.
+        tenure_days: 입사일부터 퇴사일까지의 재직일수.
+    """
+    eligible = tenure_days >= SEVERANCE_MINIMUM_TENURE_DAYS
+    severance_pay = (
+        round(average_daily_wage * SEVERANCE_ACCRUAL_DAYS * (tenure_days / 365))
+        if eligible
+        else 0
+    )
+    return {
+        "eligible": eligible,
+        "tenure_days": tenure_days,
+        "severance_pay": severance_pay,
+        "reason": (
+            "계속근로기간 1년 이상 - 지급 대상"
+            if eligible
+            else "계속근로기간 1년 미만 - 퇴직금 지급의무 없음"
+        ),
+    }
+
+
+def calculate_annual_leave(tenure_days: int) -> dict:
+    """연차유급휴가 발생 일수를 계산한다 (근로기준법 제60조).
+
+    1년 미만: 1개월 개근마다 1일(최대 11일).
+    1년 이상: 15일 + (근속연수-1)//2 가산, 최대 25일.
+    """
+    if tenure_days < 365:
+        months_worked = tenure_days // 30
+        granted_days = min(months_worked, ANNUAL_LEAVE_FIRST_YEAR_CAP)
+        return {
+            "tenure_days": tenure_days,
+            "granted_days": granted_days,
+            "basis": "1년 미만 - 1개월 개근시 1일씩 발생(최대 11일)",
+        }
+
+    years_of_service = tenure_days // 365
+    extra_days = (years_of_service - 1) // 2
+    granted_days = min(ANNUAL_LEAVE_BASE_DAYS + extra_days, ANNUAL_LEAVE_MAX_DAYS)
+    return {
+        "tenure_days": tenure_days,
+        "years_of_service": years_of_service,
+        "granted_days": granted_days,
+        "basis": "1년 이상 - 기본 15일 + 최초 1년 초과 매 2년당 1일 가산(최대 25일)",
+    }
+
+
+def calculate_overtime_premium(
+    hourly_wage: float,
+    overtime_hours: float = 0,
+    night_hours: float = 0,
+    holiday_hours: float = 0,
+) -> dict:
+    """연장·야간·휴일근로수당을 계산한다 (근로기준법 제56조, 가산율 50%/100%).
+
+    Args:
+        hourly_wage: 통상시급.
+        overtime_hours: 연장근로시간(법정 근로시간 초과분).
+        night_hours: 야간근로시간(22:00~06:00).
+        holiday_hours: 휴일근로시간(8시간 이내 50%, 초과분 100% 자동 적용).
+    """
+    holiday_normal = min(holiday_hours, 8)
+    holiday_over_8 = max(holiday_hours - 8, 0)
+
+    overtime_pay = round(hourly_wage * (1 + OVERTIME_PREMIUM_RATE) * overtime_hours)
+    night_pay = round(hourly_wage * (1 + OVERTIME_PREMIUM_RATE) * night_hours)
+    holiday_pay = round(
+        hourly_wage * (1 + HOLIDAY_PREMIUM_RATE) * holiday_normal
+        + hourly_wage * (1 + HOLIDAY_OVER_8H_PREMIUM_RATE) * holiday_over_8
+    )
+
+    return {
+        "overtime_pay": overtime_pay,
+        "night_pay": night_pay,
+        "holiday_pay": holiday_pay,
+        "total_premium_pay": overtime_pay + night_pay + holiday_pay,
     }

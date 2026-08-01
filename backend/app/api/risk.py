@@ -8,6 +8,10 @@ from app.schemas.risk import (
     DisguisedContractingResponse,
     DispatchExpirationRequest,
     DispatchExpirationResponse,
+    FreelancerMisclassificationRequest,
+    FreelancerMisclassificationResponse,
+    MonthlyHourExemptionRequest,
+    MonthlyHourExemptionResponse,
     SupervisoryStatusRequest,
     SupervisoryStatusResponse,
     WeeklyHourRequest,
@@ -38,3 +42,16 @@ def supervisory_status(payload: SupervisoryStatusRequest) -> dict:
     return rule_checker.check_supervisory_intermittent_status(
         payload.has_labor_ministry_approval, payload.approval_expiry
     )
+
+
+@router.post("/monthly-hour-exemption", response_model=MonthlyHourExemptionResponse)
+def monthly_hour_exemption(payload: MonthlyHourExemptionRequest) -> dict:
+    return rule_checker.check_monthly_hour_exemption(payload.monthly_hours)
+
+
+@router.post(
+    "/freelancer-misclassification", response_model=FreelancerMisclassificationResponse
+)
+def freelancer_misclassification(payload: FreelancerMisclassificationRequest) -> dict:
+    factors = rule_checker.FreelancerMisclassificationFactors(**payload.model_dump())
+    return rule_checker.assess_freelancer_misclassification_risk(factors)

@@ -16,3 +16,11 @@ class NonTaxableFilterRequest(BaseModel):
     meal_allowance: float = 0
     vehicle_allowance: float = 0
     reference_date: date | None = None
+
+
+class ProratedInsuranceRequest(BaseModel):
+    monthly_base_income: float = Field(gt=0)
+    industry: str
+    days_worked: int = Field(gt=0)
+    days_in_month: int = Field(gt=0, le=31)
+    reference_date: date | None = None
