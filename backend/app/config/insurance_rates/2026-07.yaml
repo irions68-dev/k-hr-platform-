@@ -1,0 +1,28 @@
+# 2026-07-01부터 적용 (국민연금 기준소득월액 상한/하한 정기개정, 나머지는 2026-01-01과 동일).
+# 출처: https://blog.zhenshuinfo.com/48, https://unips.co.kr/2026%EB%85%84-7%EC%9B%94-...
+# 2026-08-01 웹검색으로 확인. 다른 요율 파일과 마찬가지로 반드시 공식 고시 대조 필요.
+effective_date: "2026-07-01"
+
+national_pension:
+  employee_rate: 0.0475
+  income_floor: 410000
+  income_cap: 6590000
+
+health_insurance:
+  employee_rate: 0.03595
+  long_term_care_rate: 0.1314
+
+employment_insurance:
+  employee_rate: 0.009
+
+industrial_accident_insurance:
+  rates_by_industry:
+    제조업: 0.013
+    건설업: 0.035
+    도소매업: 0.008
+    서비스업: 0.008
+  default_rate: 0.0147
+
+non_taxable_allowances:
+  meal_allowance_monthly_limit: 200000
+  vehicle_allowance_monthly_limit: 200000

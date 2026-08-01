@@ -1,0 +1,25 @@
+# backend (Python)
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+backend/.pytest_cache/
+backend/.pytest_tmp/
+backend/.cache/
+backend/chroma_db/
+backend/k_hr.db
+backend/rag_result.json
+
+# frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+frontend/.vercel
+
+# misc
+.DS_Store
+*.log
