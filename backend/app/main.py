@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -15,6 +16,15 @@ from app.api.study import router as study_router
 from app.api.tax import router as tax_router
 from app.core.auth import SharedPasswordAuthMiddleware, warn_if_auth_disabled
 from app.core.db import init_db
+
+DEFAULT_DEV_ORIGINS = "http://localhost:3010,http://127.0.0.1:3010"
+# 배포 도메인(예: https://k-hr-guard.pages.dev)을 추가하려면 ALLOWED_ORIGINS
+# 환경변수에 콤마로 구분해서 넣는다. 미설정 시 로컬 개발 기본값만 허용.
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("ALLOWED_ORIGINS", DEFAULT_DEV_ORIGINS).split(",")
+    if origin.strip()
+]
 
 
 @asynccontextmanager
@@ -32,7 +42,7 @@ app = FastAPI(title="K-HR Guard", lifespan=lifespan)
 app.add_middleware(SharedPasswordAuthMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3010", "http://127.0.0.1:3010"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

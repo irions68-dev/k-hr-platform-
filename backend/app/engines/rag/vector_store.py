@@ -5,13 +5,16 @@ Pinecone 같은 유료 클라우드 벡터DB 대신 로컬 파일 모드로 충�
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import chromadb
 
 from app.engines.rag.embeddings import embed_texts
 
-DEFAULT_DB_DIR = Path(__file__).resolve().parent.parent.parent.parent / "chroma_db"
+_DEFAULT_DB_DIR = Path(__file__).resolve().parent.parent.parent.parent / "chroma_db"
+# 컨테이너 배포 시 영구 디스크 경로로 옮기고 싶으면 CHROMA_DB_DIR로 override
+DEFAULT_DB_DIR = Path(os.environ.get("CHROMA_DB_DIR", str(_DEFAULT_DB_DIR)))
 COLLECTION_NAME = "legal_documents"
 
 

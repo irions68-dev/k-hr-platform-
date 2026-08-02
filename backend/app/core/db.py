@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Generator
 from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "k_hr.db"
+_DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "k_hr.db"
+# 컨테이너 배포 시 영구 디스크 경로로 옮기고 싶으면 DB_PATH env var로 override
+DB_PATH = Path(os.environ.get("DB_PATH", str(_DEFAULT_DB_PATH)))
 engine = create_engine(
     f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False}
 )

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.pytest_tmp/
+.cache/
+chroma_db/
+k_hr.db
+tests/

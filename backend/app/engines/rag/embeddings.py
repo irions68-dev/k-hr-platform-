@@ -7,12 +7,17 @@
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastembed import TextEmbedding
 
 MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent.parent / ".cache" / "fastembed"
+_DEFAULT_CACHE_DIR = (
+    Path(__file__).resolve().parent.parent.parent.parent / ".cache" / "fastembed"
+)
+# 컨테이너 배포 시 영구 디스크 경로로 옮기고 싶으면 FASTEMBED_CACHE_DIR로 override
+CACHE_DIR = Path(os.environ.get("FASTEMBED_CACHE_DIR", str(_DEFAULT_CACHE_DIR)))
 
 _model: TextEmbedding | None = None
 
