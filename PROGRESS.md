@@ -51,8 +51,8 @@
 ## 6. 프론트엔드
 - [x] shadcn/ui(Base UI) 적용
 - [x] 홈 = "전화응대 빠른답변 허브"(법령Q&A/계산기/4대보험 바로가기 + 오늘 복습항목)
-- [x] `/calculators` 페이지 — 계산기 8종 카드형 통합
-- [x] FAQ 퀵카드
+- [x] `/calculators` 페이지 — 계산기 12종 카드형 통합
+- [x] FAQ 퀵카드 13개
 - [x] 로그인 게이트(AuthGate)
 
 ## 7. 문서
@@ -60,6 +60,15 @@
 - [ ] 3번 섹션(개발/배포 워크플로우) — 로컬우선 방식과 여전히 불일치, 다음 세션에 동기화
 - [x] 메모리(`project_k_hr_platform.md`) 최신화
 - [x] git 저장소 통합 + 커밋
+
+## 9. 배포 (2026-08-01 착수)
+- [x] 프론트: Next.js 정적 export 설정(`output: "export"`), 로컬 빌드 확인
+- [x] 백엔드: Dockerfile + render.yaml(Render Blueprint) + .dockerignore
+- [x] DB_PATH/CHROMA_DB_DIR/FASTEMBED_CACHE_DIR, ALLOWED_ORIGINS 환경변수화(배포 유연성)
+- [x] `DEPLOY.md` 단계별 가이드 작성
+- [ ] **백엔드 실제 배포** — Render 계정 생성이 필요해 사용자가 직접 진행해야 함(`DEPLOY.md` 1단계)
+- [ ] **프론트 실제 배포** — 백엔드 URL 받으면 Cloudflare Pages로 배포 가능(Wrangler CLI 이미 인증됨, irions68@gmail.com)
+- [ ] 배포 후 CORS(`ALLOWED_ORIGINS`)에 실제 Pages 도메인 연결
 
 ## 8. 직종 커버리지 매트릭스 대조 (2026-08-01, 사용자 제공 매트릭스 기준)
 | 직종 | 핵심 포인트 | 상태 |
