@@ -28,9 +28,20 @@ class VectorStore:
         self.collection = self.client.get_or_create_collection(collection_name)
 
     def add_documents(
-        self, ids: list[str], texts: list[str], metadatas: list[dict]
+        self,
+        ids: list[str],
+        texts: list[str],
+        metadatas: list[dict],
+        embedding_texts: list[str] | None = None,
     ) -> None:
-        embeddings = embed_texts(texts)
+        """문서를 적재한다.
+
+        embedding_texts를 따로 주면 그 텍스트로 벡터를 계산하고, texts는
+        LLM에 전달할 본문으로만 저장한다(둘을 분리하면 짧고 키워드가
+        압축된 텍스트로 검색 정확도를 높이면서 LLM에는 여전히 전체 본문을
+        줄 수 있다). 생략하면 기존처럼 texts 자체로 임베딩한다.
+        """
+        embeddings = embed_texts(embedding_texts or texts)
         self.collection.upsert(
             ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas
         )

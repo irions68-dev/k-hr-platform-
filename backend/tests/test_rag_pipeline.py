@@ -13,7 +13,24 @@ def seeded_store(tmp_path: Path) -> VectorStore:
     return store
 
 
-def test_ask_returns_grounded_answer_with_verified_citation(seeded_store, monkeypatch):
+@pytest.fixture()
+def minimal_store(tmp_path: Path) -> VectorStore:
+    """단일 문서만 담은 스토어 - 실제 코퍼스의 검색 순위 변동과 무관하게
+
+    파이프라인의 인용검증 로직 자체만 독립적으로 테스트하기 위함
+    (코퍼스가 커지면서 특정 질의의 top-k 순위가 바뀌어 이 테스트가
+    깨진 적이 있음 - 검색 품질 테스트는 test_corpus.py 등에서 별도로 함).
+    """
+    store = VectorStore(persist_dir=tmp_path / "chroma")
+    store.add_documents(
+        ids=["dispatch-law-art6"],
+        texts=["파견근로자보호 등에 관한 법률 제6조: 파견기간은 2년을 초과할 수 없다."],
+        metadatas=[{"citation": "파견근로자보호 등에 관한 법률 제6조"}],
+    )
+    return store
+
+
+def test_ask_returns_grounded_answer_with_verified_citation(minimal_store, monkeypatch):
     def fake_generate(question, context_chunks):
         assert context_chunks  # 검색된 근거가 실제로 프롬프트에 전달되는지 확인
         return {
@@ -28,7 +45,7 @@ def test_ask_returns_grounded_answer_with_verified_citation(seeded_store, monkey
 
     monkeypatch.setattr(generation, "generate_grounded_answer", fake_generate)
 
-    result = pipeline.ask("파견 근로자를 얼마나 오래 쓸 수 있어?", store=seeded_store)
+    result = pipeline.ask("파견 근로자를 얼마나 오래 쓸 수 있어?", store=minimal_store)
 
     assert result["answer"] == "파견기간은 최대 2년입니다."
     assert result["legal_references"] == ["파견근로자보호 등에 관한 법률 제6조"]

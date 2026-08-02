@@ -81,11 +81,15 @@ export default function LegalQaPage() {
       setHistory((prev) => [...prev, entry]);
       setQuestion("");
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 503
-          ? "GEMINI_API_KEY가 설정되어 있지 않습니다."
-          : "답변 생성에 실패했습니다. 샘플 코퍼스가 적재되어 있는지 확인하세요."
-      );
+      if (err instanceof ApiError && err.status === 503) {
+        setError("GEMINI_API_KEY가 설정되어 있지 않습니다.");
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError(
+          "Gemini API 사용 한도를 초과했습니다(무료 티어는 하루 요청 수가 제한되어 있습니다). 잠시 후 다시 시도하거나 내일 다시 시도하세요."
+        );
+      } else {
+        setError("답변 생성에 실패했습니다. 샘플 코퍼스가 적재되어 있는지 확인하세요.");
+      }
     } finally {
       setLoading(false);
     }
@@ -121,8 +125,9 @@ export default function LegalQaPage() {
         )}
       </div>
       <p className="text-sm text-muted-foreground">
-        샘플 법령 코퍼스(16개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
-        대화는 이 브라우저에 자동 저장되어 새로고침해도 남아있습니다.
+        샘플 법령·판례 코퍼스(법조문 16개 + 대법원/고등법원 판례 6개 + 세법 1개) 기반
+        답변입니다. 실사용 전 반드시 원문을 대조하세요. 대화는 이 브라우저에 자동
+        저장되어 새로고침해도 남아있습니다.
       </p>
 
       {history.length === 0 && (

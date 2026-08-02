@@ -14,7 +14,7 @@ import json
 import os
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 MODEL_NAME = "gemini-3.5-flash"
 
@@ -48,6 +48,16 @@ class GeminiNotConfiguredError(RuntimeError):
     pass
 
 
+class GeminiQuotaExceededError(RuntimeError):
+    """Gemini 무료 티어 일일/분당 호출 한도 초과 (429).
+
+    무료 티어는 모델당 하루 요청 수가 제한되어 있다(2026-08-01 기준
+    gemini-3.5-flash 무료 티어 하루 20회로 실측 확인). 전화응대 도구 특성상
+    하루 여러 번 쓰다 보면 실제로 부딪힐 수 있는 제약이라 500으로 뭉개지
+    않고 명확히 구분해서 알려준다.
+    """
+
+
 def _get_client() -> genai.Client:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -60,13 +70,22 @@ def generate_grounded_answer(question: str, context_chunks: list[str]) -> dict:
     context = "\n\n".join(context_chunks)
     prompt = f"[Vector DB 근거 조문 및 판례]\n{context}\n\n[사용자 질문]\n{question}"
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            response_mime_type="application/json",
-            response_schema=RESPONSE_SCHEMA,
-        ),
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                response_schema=RESPONSE_SCHEMA,
+            ),
+        )
+    except errors.ClientError as exc:
+        if exc.code == 429:
+            raise GeminiQuotaExceededError(
+                "Gemini API 사용 한도를 초과했습니다. 잠시 후 다시 시도하거나 "
+                "무료 티어 일일 한도라면 내일 다시 시도하세요."
+            ) from exc
+        raise
+
     return json.loads(response.text)

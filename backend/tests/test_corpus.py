@@ -9,6 +9,16 @@ def test_load_sample_corpus_returns_documents_with_required_fields():
         assert doc["law_name"]
         assert doc["article"]
         assert doc["text"]
+        assert doc["keywords"]  # 검색 정확도를 위한 임베딩 전용 키워드
+
+
+def test_embedding_text_is_short_and_keyword_dense():
+    documents = corpus.load_sample_corpus()
+    for doc in documents:
+        embedding_text = corpus._embedding_text(doc)
+        # 임베딩용 텍스트는 본문 전체가 아니라 키워드+제목 정도로 짧아야
+        # 검색 신호가 흐려지지 않는다(실측으로 확인된 회귀 방지)
+        assert len(embedding_text) < len(doc["text"])
 
 
 def test_citation_label_combines_law_name_and_article():

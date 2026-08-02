@@ -21,3 +21,5 @@ def ask(payload: AskRequest) -> dict:
         return pipeline.ask(payload.question, top_k=payload.top_k)
     except generation.GeminiNotConfiguredError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except generation.GeminiQuotaExceededError as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
