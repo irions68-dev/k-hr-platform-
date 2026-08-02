@@ -12,6 +12,7 @@ import type {
   RiskScoreResult,
   SeverancePayResult,
   SupervisoryStatusResult,
+  UnemploymentBenefitResult,
   WeeklyHolidayPayResult,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function CalculatorsPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SeveranceCalculator />
         <AnnualLeaveCalculator />
+        <UnemploymentBenefitCalculator />
         <OvertimeCalculator />
         <WeeklyHolidayPayCalculator />
         <ComprehensiveWageAdequacyCalculator />
@@ -138,6 +140,88 @@ function AnnualLeaveCalculator() {
         <ResultBox>
           <p className="text-lg font-bold">{result.granted_days}일</p>
           <p className="mt-1 text-xs text-muted-foreground">{result.basis}</p>
+        </ResultBox>
+      )}
+    </ToolCard>
+  );
+}
+
+function UnemploymentBenefitCalculator() {
+  const [age, setAge] = useState("30");
+  const [insuredDays, setInsuredDays] = useState("365");
+  const [wage, setWage] = useState("100000");
+  const [voluntary, setVoluntary] = useState(false);
+  const [justifiable, setJustifiable] = useState(false);
+  const [result, setResult] = useState<UnemploymentBenefitResult | null>(null);
+
+  const calculate = async () => {
+    const data = await apiPost<UnemploymentBenefitResult>(
+      "/calculators/unemployment-benefit",
+      {
+        age: Number(age),
+        insured_period_days: Number(insuredDays),
+        average_daily_wage: Number(wage),
+        is_voluntary_resignation: voluntary,
+        has_justifiable_reason: justifiable,
+      }
+    );
+    setResult(data);
+  };
+
+  return (
+    <ToolCard title="실업급여(구직급여) 계산">
+      <div className="flex gap-2">
+        <Field label="나이">
+          <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} />
+        </Field>
+        <Field label="피보험기간(일)">
+          <Input
+            type="number"
+            value={insuredDays}
+            onChange={(e) => setInsuredDays(e.target.value)}
+          />
+        </Field>
+        <Field label="평균임금(1일분)">
+          <CurrencyInput value={wage} onChange={setWage} />
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={voluntary}
+          onChange={(e) => setVoluntary(e.target.checked)}
+        />
+        자발적 퇴사임
+      </label>
+      {voluntary && (
+        <label className="flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={justifiable}
+            onChange={(e) => setJustifiable(e.target.checked)}
+          />
+          정당한 사유 있음(임금체불·괴롭힘 등)
+        </label>
+      )}
+      <Button size="sm" onClick={calculate}>계산</Button>
+      {result && (
+        <ResultBox>
+          {result.eligible ? (
+            <>
+              <p className="text-lg font-bold">
+                {result.total_benefit?.toLocaleString()}원
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                1일 {result.daily_benefit?.toLocaleString()}원 ×{" "}
+                {result.scheduled_benefit_days}일
+              </p>
+            </>
+          ) : (
+            <p className="font-medium">{result.reason}</p>
+          )}
+          {result.disclaimer && (
+            <p className="mt-1 text-xs text-muted-foreground">{result.disclaimer}</p>
+          )}
         </ResultBox>
       )}
     </ToolCard>

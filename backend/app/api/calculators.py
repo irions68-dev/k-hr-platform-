@@ -19,6 +19,8 @@ from app.schemas.calculators import (
     OvertimePremiumResponse,
     SeverancePayRequest,
     SeverancePayResponse,
+    UnemploymentBenefitRequest,
+    UnemploymentBenefitResponse,
     WeeklyHolidayPayRequest,
     WeeklyHolidayPayResponse,
 )
@@ -68,4 +70,15 @@ def comprehensive_wage_adequacy(payload: ComprehensiveWageAdequacyRequest) -> di
         payload.included_overtime_pay,
         payload.actual_overtime_hours,
         payload.hourly_wage,
+    )
+
+
+@router.post("/unemployment-benefit", response_model=UnemploymentBenefitResponse)
+def unemployment_benefit(payload: UnemploymentBenefitRequest) -> dict:
+    return rule_checker.calculate_unemployment_benefit(
+        payload.age,
+        payload.insured_period_days,
+        payload.average_daily_wage,
+        is_voluntary_resignation=payload.is_voluntary_resignation,
+        has_justifiable_reason=payload.has_justifiable_reason,
     )

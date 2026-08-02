@@ -127,6 +127,15 @@ export interface ComprehensiveWageAdequacyResult {
   disclaimer: string;
 }
 
+export interface UnemploymentBenefitResult {
+  eligible: boolean;
+  reason: string;
+  daily_benefit: number | null;
+  scheduled_benefit_days: number | null;
+  total_benefit: number | null;
+  disclaimer: string | null;
+}
+
 export interface SupervisoryStatusResult {
   status: RiskStatus;
   reason: string;

@@ -25,6 +25,8 @@ const FAQ_QUESTIONS = [
   "주휴수당은 언제 받을 수 있나요?",
   "감시단속적 근로자도 야간수당 받나요?",
   "고객이 폭언하면 어떻게 보호받나요?",
+  "계약만료로 그만두면 실업급여 받을 수 있나요?",
+  "실업급여는 언제까지 신청해야 하나요?",
 ];
 
 export default function LegalQaPage() {
@@ -57,7 +59,7 @@ export default function LegalQaPage() {
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
       <h1 className="text-2xl font-bold">법령 Q&A · 전화응대 헬프데스크</h1>
       <p className="text-sm text-muted-foreground">
-        샘플 법령 코퍼스(14개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
+        샘플 법령 코퍼스(16개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
       </p>
 
       {history.length === 0 && (

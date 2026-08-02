@@ -40,6 +40,20 @@ HOLIDAY_OVER_8H_PREMIUM_RATE = 1.0  # 휴일근로 8시간 초과분 가산율
 WEEKLY_HOLIDAY_MIN_HOURS = 15  # 주휴수당 지급을 위한 최소 주 소정근로시간
 WEEKLY_HOLIDAY_MAX_DAILY_HOURS = 8  # 주휴수당 산정 시 1일 근로시간 인정 상한
 
+UNEMPLOYMENT_MIN_INSURED_DAYS = 180  # 구직급여 최소 피보험단위기간(고용보험법 제40조)
+UNEMPLOYMENT_BENEFIT_RATE = 0.6  # 1일 구직급여액 = 평균임금의 60%
+UNEMPLOYMENT_DAILY_CAP = 68100  # 2026년 1일 상한액(웹검색 확인, 매년 변경)
+UNEMPLOYMENT_DAILY_FLOOR = 66048  # 2026년 1일 하한액(최저임금 80%×8시간 연동, 매년 변경)
+
+# 소정급여일수(고용보험법 별표1): (피보험기간 상한, 50세 미만 일수, 50세 이상·장애인 일수)
+UNEMPLOYMENT_SCHEDULED_DAYS_TABLE = [
+    (1, 120, 120),
+    (3, 150, 180),
+    (5, 180, 210),
+    (10, 210, 240),
+    (float("inf"), 240, 270),
+]
+
 
 def check_dispatch_expiration(
     contract_start_date: date, reference_date: date | None = None
@@ -372,5 +386,66 @@ def assess_comprehensive_wage_adequacy(
             "실제 연장근로시간 산정 기준(포괄임금 계약서상 가정 연장시간 vs "
             "실근무기록)에 따라 결과가 달라질 수 있으므로, 임금대장·근태기록과 "
             "대조해 확인이 필요합니다."
+        ),
+    }
+
+
+def get_unemployment_scheduled_days(age: int, insured_period_days: int) -> int:
+    """소정급여일수를 연령·피보험기간 기준으로 조회한다 (고용보험법 별표1)."""
+    insured_years = insured_period_days / 365
+    is_senior = age >= 50
+
+    for years_upper_bound, under_50_days, senior_days in UNEMPLOYMENT_SCHEDULED_DAYS_TABLE:
+        if insured_years < years_upper_bound:
+            return senior_days if is_senior else under_50_days
+
+    raise AssertionError("unreachable: table's last bound is inf")
+
+
+def calculate_unemployment_benefit(
+    age: int,
+    insured_period_days: int,
+    average_daily_wage: float,
+    is_voluntary_resignation: bool = False,
+    has_justifiable_reason: bool = False,
+) -> dict:
+    """실업급여(구직급여) 수급 여부와 예상 총액을 계산한다 (고용보험법 제40조·제46조).
+
+    파견 계약 종료·기간만료·해고처럼 비자발적으로 이직한 경우가 실무에서
+    가장 흔한 문의다. 자발적 퇴사는 원칙적으로 제외되지만, 정당한 사유
+    (임금체불, 직장 내 괴롭힘 등)가 있으면 예외적으로 인정될 수 있다.
+    """
+    if insured_period_days < UNEMPLOYMENT_MIN_INSURED_DAYS:
+        return {
+            "eligible": False,
+            "reason": (
+                f"피보험단위기간 {insured_period_days}일 - 최소 "
+                f"{UNEMPLOYMENT_MIN_INSURED_DAYS}일 미만으로 지급 대상 아님"
+            ),
+        }
+
+    if is_voluntary_resignation and not has_justifiable_reason:
+        return {
+            "eligible": False,
+            "reason": "자발적 퇴사(정당한 사유 없음) - 원칙적으로 지급 대상 아님",
+        }
+
+    daily_benefit = min(
+        max(average_daily_wage * UNEMPLOYMENT_BENEFIT_RATE, UNEMPLOYMENT_DAILY_FLOOR),
+        UNEMPLOYMENT_DAILY_CAP,
+    )
+    scheduled_days = get_unemployment_scheduled_days(age, insured_period_days)
+    total_benefit = round(daily_benefit * scheduled_days)
+
+    return {
+        "eligible": True,
+        "daily_benefit": round(daily_benefit),
+        "scheduled_benefit_days": scheduled_days,
+        "total_benefit": total_benefit,
+        "reason": "지급 대상 - 이직일 다음날부터 12개월 이내에 소정급여일수만큼 수급 가능",
+        "disclaimer": (
+            "상한액 68,100원·하한액 66,048원은 2026년 기준(최저임금 연동, 매년 변경)이며 "
+            "반복수급자 감액·대기기간 등은 반영하지 않은 근사치입니다. 정확한 금액과 "
+            "신청 절차는 고용센터 또는 고용보험 홈페이지(ei.go.kr) 확인이 필요합니다."
         ),
     }

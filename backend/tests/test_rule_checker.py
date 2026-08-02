@@ -248,3 +248,56 @@ class TestSupervisoryStatusNightPremiumNote:
         without_approval = rule_checker.check_supervisory_intermittent_status(False, None)
         assert with_approval["night_premium_note"]
         assert without_approval["night_premium_note"]
+
+
+class TestUnemploymentScheduledDays:
+    def test_under_1_year_under_50(self):
+        assert rule_checker.get_unemployment_scheduled_days(30, 300) == 120
+
+    def test_1_to_3_years_under_50(self):
+        assert rule_checker.get_unemployment_scheduled_days(30, 365 * 2) == 150
+
+    def test_10_years_plus_under_50(self):
+        assert rule_checker.get_unemployment_scheduled_days(30, 365 * 12) == 240
+
+    def test_1_to_3_years_over_50(self):
+        assert rule_checker.get_unemployment_scheduled_days(55, 365 * 2) == 180
+
+    def test_10_years_plus_over_50(self):
+        assert rule_checker.get_unemployment_scheduled_days(55, 365 * 12) == 270
+
+
+class TestUnemploymentBenefit:
+    def test_below_180_days_not_eligible(self):
+        result = rule_checker.calculate_unemployment_benefit(30, 179, 100000)
+        assert result["eligible"] is False
+
+    def test_voluntary_resignation_without_reason_not_eligible(self):
+        result = rule_checker.calculate_unemployment_benefit(
+            30, 200, 100000, is_voluntary_resignation=True
+        )
+        assert result["eligible"] is False
+
+    def test_voluntary_resignation_with_justifiable_reason_is_eligible(self):
+        result = rule_checker.calculate_unemployment_benefit(
+            30,
+            200,
+            100000,
+            is_voluntary_resignation=True,
+            has_justifiable_reason=True,
+        )
+        assert result["eligible"] is True
+
+    def test_daily_benefit_capped_at_ceiling(self):
+        result = rule_checker.calculate_unemployment_benefit(30, 365, 1000000)
+        assert result["daily_benefit"] == rule_checker.UNEMPLOYMENT_DAILY_CAP
+
+    def test_daily_benefit_floored_at_minimum(self):
+        result = rule_checker.calculate_unemployment_benefit(30, 365, 10000)
+        assert result["daily_benefit"] == rule_checker.UNEMPLOYMENT_DAILY_FLOOR
+
+    def test_total_benefit_equals_daily_times_scheduled_days(self):
+        result = rule_checker.calculate_unemployment_benefit(30, 365, 100000)
+        assert result["total_benefit"] == (
+            result["daily_benefit"] * result["scheduled_benefit_days"]
+        )

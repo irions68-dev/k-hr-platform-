@@ -126,6 +126,17 @@ def test_comprehensive_wage_adequacy_calculator(client):
     assert body["shortfall"] > 0
 
 
+def test_unemployment_benefit_calculator(client):
+    resp = client.post(
+        "/calculators/unemployment-benefit",
+        json={"age": 30, "insured_period_days": 365, "average_daily_wage": 100000},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["eligible"] is True
+    assert body["total_benefit"] == body["daily_benefit"] * body["scheduled_benefit_days"]
+
+
 def test_supervisory_status_includes_night_premium_note(client):
     resp = client.post(
         "/risk/supervisory-status", json={"has_labor_ministry_approval": True}

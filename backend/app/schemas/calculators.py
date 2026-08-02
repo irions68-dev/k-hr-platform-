@@ -72,3 +72,20 @@ class ComprehensiveWageAdequacyResponse(BaseModel):
     adequate: bool
     status: RiskStatus
     disclaimer: str
+
+
+class UnemploymentBenefitRequest(BaseModel):
+    age: int = Field(gt=0, le=120)
+    insured_period_days: int = Field(ge=0)
+    average_daily_wage: float = Field(gt=0)
+    is_voluntary_resignation: bool = False
+    has_justifiable_reason: bool = False
+
+
+class UnemploymentBenefitResponse(BaseModel):
+    eligible: bool
+    reason: str
+    daily_benefit: int | None = None
+    scheduled_benefit_days: int | None = None
+    total_benefit: int | None = None
+    disclaimer: str | None = None
