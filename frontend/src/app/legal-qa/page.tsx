@@ -125,7 +125,7 @@ export default function LegalQaPage() {
         )}
       </div>
       <p className="text-sm text-muted-foreground">
-        샘플 법령·판례 코퍼스(법조문 16개 + 대법원/고등법원 판례 6개 + 세법 1개) 기반
+        샘플 법령·판례 코퍼스(법조문 16개 + 대법원/고등법원 판례 8개 + 세법 1개) 기반
         답변입니다. 실사용 전 반드시 원문을 대조하세요. 대화는 이 브라우저에 자동
         저장되어 새로고침해도 남아있습니다.
       </p>
