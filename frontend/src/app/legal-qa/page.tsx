@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiPost, ApiError } from "@/lib/api";
 import type { LegalQaResponse } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface ChatEntry {
+  id: string;
   question: string;
   response: LegalQaResponse;
+  savedToCases: boolean;
 }
 
 const FAQ_QUESTIONS = [
@@ -29,11 +31,39 @@ const FAQ_QUESTIONS = [
   "실업급여는 언제까지 신청해야 하나요?",
 ];
 
+const HISTORY_STORAGE_KEY = "khr-legal-qa-history";
+const MAX_HISTORY_ENTRIES = 50;
+
+function loadHistory(): ChatEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as ChatEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function LegalQaPage() {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<ChatEntry[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 새로고침·페이지 이동 후에도 대화가 남아있도록 이 브라우저에 저장해둔 걸 불러온다
+  useEffect(() => {
+    setHistory(loadHistory());
+    setHistoryLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!historyLoaded) return;
+    window.localStorage.setItem(
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(history.slice(-MAX_HISTORY_ENTRIES))
+    );
+  }, [history, historyLoaded]);
 
   const ask = async (overrideQuestion?: string) => {
     const q = (overrideQuestion ?? question).trim();
@@ -42,7 +72,13 @@ export default function LegalQaPage() {
     setError(null);
     try {
       const response = await apiPost<LegalQaResponse>("/legal-qa/ask", { question: q });
-      setHistory((prev) => [...prev, { question: q, response }]);
+      const entry: ChatEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        question: q,
+        response,
+        savedToCases: false,
+      };
+      setHistory((prev) => [...prev, entry]);
       setQuestion("");
     } catch (err) {
       setError(
@@ -55,11 +91,38 @@ export default function LegalQaPage() {
     }
   };
 
+  const saveToCases = async (entry: ChatEntry) => {
+    await apiPost("/cases", {
+      question: entry.question,
+      answer: entry.response.answer,
+      legal_references: entry.response.legal_references,
+      exam_part: entry.response.study_tag?.exam_part ?? "",
+      core_keyword: entry.response.study_tag?.core_keyword ?? "",
+      importance: entry.response.study_tag?.importance ?? "Medium",
+    });
+    setHistory((prev) =>
+      prev.map((h) => (h.id === entry.id ? { ...h, savedToCases: true } : h))
+    );
+  };
+
+  const clearHistory = () => {
+    if (!window.confirm("대화 기록을 전부 지울까요?")) return;
+    setHistory([]);
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
-      <h1 className="text-2xl font-bold">법령 Q&A · 전화응대 헬프데스크</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">법령 Q&A · 전화응대 헬프데스크</h1>
+        {history.length > 0 && (
+          <Button variant="outline" size="sm" onClick={clearHistory}>
+            대화 지우기
+          </Button>
+        )}
+      </div>
       <p className="text-sm text-muted-foreground">
         샘플 법령 코퍼스(16개 조문) 기반 답변입니다. 실사용 전 반드시 원문을 대조하세요.
+        대화는 이 브라우저에 자동 저장되어 새로고침해도 남아있습니다.
       </p>
 
       {history.length === 0 && (
@@ -86,8 +149,8 @@ export default function LegalQaPage() {
             </p>
           ) : (
             <div className="flex flex-col gap-6">
-              {history.map((entry, i) => (
-                <div key={i} className="flex flex-col gap-2">
+              {history.map((entry) => (
+                <div key={entry.id} className="flex flex-col gap-2">
                   <div className="self-end rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
                     {entry.question}
                   </div>
@@ -110,6 +173,15 @@ export default function LegalQaPage() {
                         <p>중요도: {entry.response.study_tag.importance}</p>
                       </div>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="self-start"
+                      disabled={entry.savedToCases}
+                      onClick={() => saveToCases(entry)}
+                    >
+                      {entry.savedToCases ? "사례노트에 저장됨" : "사례노트에 저장"}
+                    </Button>
                   </div>
                 </div>
               ))}
