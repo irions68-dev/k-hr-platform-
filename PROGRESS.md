@@ -1,6 +1,6 @@
 # K-HR Guard 진행 현황판
 
-> 갱신: 2026-08-01 (직종 커버리지 매트릭스 갭 반영 완료 — 주휴수당/포괄임금제/감단 야간수당).
+> 갱신: 2026-08-02 (실 배포 완료 — https://k-hr-guard.pages.dev / 백엔드 임베딩 Gemini API로 전환).
 > 이 파일이 유일한 진행상황 기준(source of truth). 항목 완료 시 여기 체크만 갱신.
 
 ## 0. 인프라/보안
@@ -66,14 +66,17 @@
 - [x] 메모리(`project_k_hr_platform.md`) 최신화
 - [x] git 저장소 통합 + 커밋
 
-## 9. 배포 (2026-08-01 착수)
+## 9. 배포 (2026-08-01 착수, 2026-08-02 완료)
 - [x] 프론트: Next.js 정적 export 설정(`output: "export"`), 로컬 빌드 확인
 - [x] 백엔드: Dockerfile + render.yaml(Render Blueprint) + .dockerignore
-- [x] DB_PATH/CHROMA_DB_DIR/FASTEMBED_CACHE_DIR, ALLOWED_ORIGINS 환경변수화(배포 유연성)
+- [x] DB_PATH/CHROMA_DB_DIR, ALLOWED_ORIGINS 환경변수화(배포 유연성)
 - [x] `DEPLOY.md` 단계별 가이드 작성
-- [ ] **백엔드 실제 배포** — Render 계정 생성이 필요해 사용자가 직접 진행해야 함(`DEPLOY.md` 1단계)
-- [ ] **프론트 실제 배포** — 백엔드 URL 받으면 Cloudflare Pages로 배포 가능(Wrangler CLI 이미 인증됨, irions68@gmail.com)
-- [ ] 배포 후 CORS(`ALLOWED_ORIGINS`)에 실제 Pages 도메인 연결
+- [x] **백엔드 실제 배포 완료** — https://k-hr-backend.onrender.com (Render, GitHub `irions68-dev/k-hr-platform-` main 브랜치 Blueprint 연동, 자동 재배포)
+- [x] **프론트 실제 배포 완료** — https://k-hr-guard.pages.dev (Cloudflare Pages)
+- [x] CORS(`ALLOWED_ORIGINS`)에 실제 Pages 도메인 연결 확인
+- [x] **임베딩을 fastembed(로컬)→Gemini API로 교체(2026-08-02)** — Render 무료플랜 RAM 512MB에서 fastembed 다국어 모델(~220MB) 로딩 중 OOM으로 프로세스가 죽는 걸 실측 확인, `app/engines/rag/embeddings.py`를 `gemini-embedding-001` 호출로 전면 교체. 검색 품질 저하 없음(위장도급 질의 재검증 시 1순위 정확매칭 유지). `requirements.txt`에서 fastembed 제거, Dockerfile 빌드 가벼워짐.
+- [x] **재시작 시 자동 코퍼스 재적재(2026-08-02)** — Render 무료플랜은 재배포/재시작마다 디스크가 초기화돼서 ChromaDB가 비는 문제가 있어, `app/main.py` lifespan에서 스토어가 비어있으면 부팅 시 자동 재적재하도록 수정(실패해도 앱 부팅은 막지 않음). 수동 트리거용 `/legal-qa/ingest-sample-corpus` 엔드포인트도 유지.
+- [ ] Render 무료플랜은 15분 미사용 시 슬립 → 재기동 20~30초 지연 있음(비용 들여 Starter 이상으로 올리면 해소, 현재는 감수)
 
 ## 8. 직종 커버리지 매트릭스 대조 (2026-08-01, 사용자 제공 매트릭스 기준)
 | 직종 | 핵심 포인트 | 상태 |
