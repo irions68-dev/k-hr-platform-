@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -16,6 +17,8 @@ from app.api.study import router as study_router
 from app.api.tax import router as tax_router
 from app.core.auth import SharedPasswordAuthMiddleware, warn_if_auth_disabled
 from app.core.db import init_db
+from app.engines.rag import corpus
+from app.engines.rag.vector_store import get_default_store
 
 DEFAULT_DEV_ORIGINS = "http://localhost:3010,http://127.0.0.1:3010"
 # 배포 도메인(예: https://k-hr-guard.pages.dev)을 추가하려면 ALLOWED_ORIGINS
@@ -31,6 +34,19 @@ ALLOWED_ORIGINS = [
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     warn_if_auth_disabled()
     init_db()
+    # Render 무료플랜은 재배포/재시작마다 디스크가 초기화돼서 ChromaDB가
+    # 비어있는 채로 뜬다 - 비어있으면 매 기동 시 자동으로 다시 채운다
+    # (upsert라 중복 걱정 없음). GEMINI_API_KEY 미설정(로컬 테스트 등)이거나
+    # API 호출이 실패해도 앱 부팅 자체는 막지 않는다.
+    try:
+        store = get_default_store()
+        if store.count() == 0:
+            corpus.ingest_sample_corpus(store)
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "샘플 코퍼스 자동 적재 실패 - /legal-qa/ingest-sample-corpus로 수동 적재 필요",
+            exc_info=True,
+        )
     yield
 
 

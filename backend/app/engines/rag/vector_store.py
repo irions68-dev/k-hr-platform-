@@ -41,13 +41,13 @@ class VectorStore:
         압축된 텍스트로 검색 정확도를 높이면서 LLM에는 여전히 전체 본문을
         줄 수 있다). 생략하면 기존처럼 texts 자체로 임베딩한다.
         """
-        embeddings = embed_texts(embedding_texts or texts)
+        embeddings = embed_texts(embedding_texts or texts, task_type="RETRIEVAL_DOCUMENT")
         self.collection.upsert(
             ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas
         )
 
     def query(self, query_text: str, top_k: int = 3) -> dict:
-        query_embedding = embed_texts([query_text])[0]
+        query_embedding = embed_texts([query_text], task_type="RETRIEVAL_QUERY")[0]
         return self.collection.query(query_embeddings=[query_embedding], n_results=top_k)
 
     def count(self) -> int:

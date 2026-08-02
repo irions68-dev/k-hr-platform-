@@ -1,9 +1,28 @@
+import hashlib
 from pathlib import Path
 
 import pytest
 
 from app.engines.rag import corpus, generation, pipeline
 from app.engines.rag.vector_store import VectorStore
+
+
+def _fake_embed_texts(texts: list[str], task_type: str = "RETRIEVAL_DOCUMENT") -> list[list[float]]:
+    """Gemini API를 실제로 호출하지 않는 결정적(deterministic) 가짜 임베딩.
+
+    이 파일의 테스트들은 파이프라인 로직(인용검증 등)만 검증하고 검색
+    순위 품질은 다루지 않으므로, 텍스트마다 고정된 벡터만 나오면 충분하다.
+    """
+    return [
+        [b / 255 for b in hashlib.sha256(text.encode()).digest()[:16]] for text in texts
+    ]
+
+
+@pytest.fixture(autouse=True)
+def _mock_gemini_embeddings(monkeypatch):
+    monkeypatch.setattr(
+        "app.engines.rag.vector_store.embed_texts", _fake_embed_texts
+    )
 
 
 @pytest.fixture()

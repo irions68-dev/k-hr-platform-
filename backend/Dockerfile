@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# chromadb/fastembed의 일부 의존성(hnswlib 등)이 빌드 도구를 필요로 함
+# chromadb의 일부 의존성(hnswlib 등)이 빌드 도구를 필요로 함
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -13,10 +13,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-# SQLite/ChromaDB/fastembed 캐시가 저장될 디렉토리 - 호스팅에 영구 디스크가
-# 있다면 이 경로를 마운트해야 재배포 후에도 데이터가 유지된다.
+# SQLite/ChromaDB 데이터가 저장될 디렉토리 - 호스팅에 영구 디스크가 있다면
+# 이 경로를 마운트해야 재배포 후에도 데이터가 유지된다. 임베딩은 Gemini API를
+# 쓰므로(app/engines/rag/embeddings.py) 로컬 모델 캐시는 더 이상 필요 없다.
 RUN mkdir -p /app/data
-ENV FASTEMBED_CACHE_DIR=/app/data/.cache/fastembed
 
 EXPOSE 8000
 
