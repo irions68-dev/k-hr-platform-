@@ -34,3 +34,20 @@ def client(monkeypatch):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def client_db():
+    """HTTP 없이 엔진 함수(예: exam_daily)를 직접 테스트할 때 쓰는 격리된 세션."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=engine)
+    session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    db = session_local()
+    try:
+        yield db
+    finally:
+        db.close()

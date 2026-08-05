@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.brief import router as brief_router
 from app.api.calculators import router as calculators_router
 from app.api.cases import router as cases_router
+from app.api.exam import router as exam_router
 from app.api.legal_qa import router as legal_qa_router
 from app.api.risk import router as risk_router
 from app.api.study import router as study_router
@@ -69,6 +70,7 @@ app.include_router(study_router)
 app.include_router(brief_router)
 app.include_router(tax_router)
 app.include_router(legal_qa_router)
+app.include_router(exam_router)
 
 
 @app.get("/health")

@@ -141,3 +141,27 @@ export interface SupervisoryStatusResult {
   reason: string;
   night_premium_note: string;
 }
+
+export interface DailyQuestion {
+  id: string;
+  subject: string;
+  number: number;
+  question: string;
+  choices: string[];
+}
+
+export interface ExamAttemptResult {
+  correct: boolean;
+  answer_index: number;
+  explanation: string | null;
+  keywords: string[];
+  next_review_date: string;
+}
+
+export interface ExamStats {
+  total_questions: number;
+  attempted_questions: number;
+  total_attempts: number;
+  total_correct: number;
+  accuracy: number | null;
+}

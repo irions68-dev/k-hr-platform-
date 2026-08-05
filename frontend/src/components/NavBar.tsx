@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/tax", label: "4대보험 계산" },
   { href: "/cases", label: "사례노트" },
   { href: "/study", label: "수험학습" },
+  { href: "/exam", label: "오늘의 기출" },
 ];
 
 export default function NavBar() {
