@@ -92,7 +92,10 @@ def record_attempt(db: Session, question_id: str, selected_index: int) -> dict:
     if question is None:
         raise ValueError(f"알 수 없는 문항 ID: {question_id}")
 
-    correct = selected_index == question["answer_index"]
+    # 출제기관이 복수정답 처리한 문항(예: 지문 오류로 구제)은 accepted_answers에
+    # 모든 정답을 담아두고, 없으면 answer_index 단일 정답으로 채점한다.
+    accepted = set(question.get("accepted_answers") or [question["answer_index"]])
+    correct = selected_index in accepted
     quality = 5 if correct else 1
 
     progress = (
