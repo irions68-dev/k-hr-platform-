@@ -11,7 +11,7 @@ def test_load_question_bank_has_required_fields():
         assert q["id"] == qid
         assert len(q["choices"]) == 5
         assert 1 <= q["answer_index"] <= 5
-        assert q["subject"] in {"노동법1", "노동법2", "사회보험법", "민법", "경제학원론"}
+        assert q["subject"] in {"노동법1", "노동법2", "사회보험법", "민법", "경제학원론", "경영학개론"}
 
 
 def test_select_daily_questions_returns_three_and_hides_answer(client_db):
