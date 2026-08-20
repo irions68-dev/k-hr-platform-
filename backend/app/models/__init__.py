@@ -3,6 +3,7 @@ from app.models.exam_question_progress import ExamQuestionProgress
 from app.models.mood_checkin import MoodCheckin
 from app.models.study_review import StudyReviewItem
 from app.models.work_log_entry import WorkLogEntry
+from app.models.work_log_weekly_report import WorkLogWeeklyReport
 
 __all__ = [
     "CaseNote",
@@ -10,4 +11,5 @@ __all__ = [
     "MoodCheckin",
     "StudyReviewItem",
     "WorkLogEntry",
+    "WorkLogWeeklyReport",
 ]

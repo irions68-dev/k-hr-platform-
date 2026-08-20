@@ -10,7 +10,7 @@ Render 무료플랜은 재배포마다 SQLite가 초기화되므로, 이 데이�
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,7 @@ from app.engines.gemini_client import (
     generate_structured_json,
 )
 from app.models.work_log_entry import WorkLogEntry
+from app.models.work_log_weekly_report import WorkLogWeeklyReport
 
 SYSTEM_PROMPT = (
     "너는 인력파견회사 관리팀 담당자를 돕는 업무 보고서 작성 도우미이다. "
@@ -90,3 +91,66 @@ def generate_report(
     )
     result = generate_structured_json(prompt, SYSTEM_PROMPT, RESPONSE_SCHEMA)
     return result["report"]
+
+
+def _week_bounds(reference: date) -> tuple[date, date]:
+    start = reference - timedelta(days=reference.weekday())  # 월요일
+    end = start + timedelta(days=4)  # 금요일
+    return start, end
+
+
+def ensure_weekly_report(
+    db: Session, user: str = DEFAULT_USER, today: date | None = None
+) -> WorkLogWeeklyReport | None:
+    """금요일 이후 첫 방문에서 이번 주 보고서를 자동 생성해 저장한다.
+
+    Render 무료플랜엔 진짜 크론이 없고("15분 미사용 시 슬립") 페이지를
+    직접 열어야 실행되는 이 앱 구조상 정시 자동 실행은 애초에 불가능하다 -
+    대신 사용자가 평일 내내 이 앱을 실제로 여는 걸 이용해서, 금요일 이후
+    첫 방문을 사실상의 트리거로 삼는다. 같은 주에 이미 생성된 보고서가
+    있으면 재호출하지 않아 AI 호출을 낭비하지 않는다("이번 주 보고서
+    만들기" 버튼은 이것과 무관하게 언제든 최신 버전을 즉석 생성한다).
+    """
+    today = today or date.today()
+    if today.weekday() < 4:  # 월(0)~목(3)은 아직 이르다
+        return None
+
+    week_start, week_end = _week_bounds(today)
+    existing = (
+        db.query(WorkLogWeeklyReport)
+        .filter(
+            WorkLogWeeklyReport.week_start == week_start,
+            WorkLogWeeklyReport.created_by == user,
+        )
+        .first()
+    )
+    if existing:
+        return existing
+
+    entries = list_entries(db, week_start, week_end, user)
+    if not entries:
+        return None
+
+    report_text = generate_report(db, week_start, week_end, user)
+    saved = WorkLogWeeklyReport(
+        week_start=week_start,
+        week_end=week_end,
+        report_text=report_text,
+        created_by=user,
+    )
+    db.add(saved)
+    db.commit()
+    db.refresh(saved)
+    return saved
+
+
+def list_weekly_reports(
+    db: Session, user: str = DEFAULT_USER, limit: int = 12
+) -> list[WorkLogWeeklyReport]:
+    return (
+        db.query(WorkLogWeeklyReport)
+        .filter(WorkLogWeeklyReport.created_by == user)
+        .order_by(WorkLogWeeklyReport.week_start.desc())
+        .limit(limit)
+        .all()
+    )

@@ -69,4 +69,21 @@ def generate_structured_json(
         if exc.code == 429:
             raise GeminiQuotaExceededError(_QUOTA_MESSAGE) from exc
         raise
-    return json.loads(response.text)
+    return _normalize_literal_newlines(json.loads(response.text))
+
+
+def _normalize_literal_newlines(value):
+    """Gemini가 가끔 JSON 문자열 안에서 줄바꿈을 이중 이스케이프해서
+
+    (`\\n`을 인코딩해야 할 자리에 `\\\\n`을 내보내) 파싱 후에도 실제 줄바꿈이
+    아니라 문자 그대로의 "\\n" 두 글자가 남는 경우가 있다(실측: 업무 로그
+    주간 보고서 실제 생성 중 발견). 화면에 백슬래시-n이 그대로 보이는 걸
+    막기 위해 모든 문자열 값에서 이 패턴을 실제 줄바꿈으로 정규화한다.
+    """
+    if isinstance(value, str):
+        return value.replace("\\n", "\n")
+    if isinstance(value, list):
+        return [_normalize_literal_newlines(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _normalize_literal_newlines(item) for key, item in value.items()}
+    return value

@@ -233,6 +233,14 @@ export interface WorkLogExportResult {
   text: string;
 }
 
+export interface WorkLogWeeklyReport {
+  id: number;
+  week_start: string;
+  week_end: string;
+  report_text: string;
+  generated_at: string;
+}
+
 export interface ComplianceCheckResult {
   risk_level: string;
   risk_summary: string;

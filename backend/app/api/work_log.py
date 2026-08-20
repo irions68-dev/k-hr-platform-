@@ -13,6 +13,7 @@ from app.schemas.work_log import (
     WorkLogExportResult,
     WorkLogReportRequest,
     WorkLogReportResult,
+    WorkLogWeeklyReportOut,
 )
 
 router = APIRouter(prefix="/work-log", tags=["work-log"])
@@ -50,3 +51,18 @@ def report(payload: WorkLogReportRequest, db: Session = Depends(get_db)) -> dict
     except work_log.GeminiQuotaExceededError as exc:
         raise HTTPException(status_code=429, detail=str(exc)) from exc
     return {"report": text}
+
+
+@router.get("/weekly-report/auto", response_model=WorkLogWeeklyReportOut | None)
+def weekly_report_auto(db: Session = Depends(get_db)) -> object:
+    try:
+        return work_log.ensure_weekly_report(db)
+    except work_log.GeminiNotConfiguredError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except work_log.GeminiQuotaExceededError as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+
+
+@router.get("/weekly-report/history", response_model=list[WorkLogWeeklyReportOut])
+def weekly_report_history(db: Session = Depends(get_db)) -> list:
+    return work_log.list_weekly_reports(db)

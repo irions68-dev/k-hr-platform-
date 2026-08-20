@@ -27,3 +27,11 @@ class WorkLogReportResult(BaseModel):
 
 class WorkLogExportResult(BaseModel):
     text: str
+
+
+class WorkLogWeeklyReportOut(BaseModel):
+    id: int
+    week_start: date
+    week_end: date
+    report_text: str
+    generated_at: datetime
