@@ -177,3 +177,34 @@ export interface TodayWellbeing {
   cases_today: number;
   exam_new_today: number;
 }
+
+export interface EducationItem {
+  school: string;
+  major: string;
+  degree: string;
+  status: string;
+}
+
+export interface CareerItem {
+  company: string;
+  period: string;
+  role: string;
+}
+
+export interface ResumeExtractResult {
+  name: string;
+  birth_date: string;
+  phone: string;
+  email: string;
+  address: string;
+  total_years_experience: number;
+  education: EducationItem[];
+  career: CareerItem[];
+  certifications: string[];
+  languages: string[];
+  military_service: string;
+  desired_position: string;
+  desired_salary: string;
+  desired_location: string;
+  notes: string;
+}

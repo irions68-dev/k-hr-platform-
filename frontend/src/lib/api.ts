@@ -55,3 +55,24 @@ export function apiGet<T>(path: string): Promise<T> {
 export function apiPost<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>(path, { method: "POST", body: JSON.stringify(body) });
 }
+
+export async function apiPostFile<T>(path: string, file: File): Promise<T> {
+  const password = getStoredPassword();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    // Content-Type을 직접 지정하면 안 됨 - FormData는 브라우저가 boundary를
+    // 포함해서 자동으로 설정해야 서버가 파싱할 수 있음.
+    headers: password ? { [AUTH_HEADER]: password } : {},
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new ApiError(res.status, detail || res.statusText);
+  }
+  return (await res.json()) as T;
+}
