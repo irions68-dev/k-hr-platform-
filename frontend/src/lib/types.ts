@@ -252,3 +252,10 @@ export interface ClientNegotiationResult {
   email_draft: string;
   key_points: string[];
 }
+
+export interface AttritionSignalResult {
+  observed_signals: string[];
+  suggested_approach: string;
+  talking_points: string[];
+  caution_note: string;
+}

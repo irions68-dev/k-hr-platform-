@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.attrition_signal import router as attrition_signal_router
 from app.api.brief import router as brief_router
 from app.api.calculators import router as calculators_router
 from app.api.cases import router as cases_router
@@ -85,6 +86,7 @@ app.include_router(work_log_router)
 app.include_router(compliance_check_router)
 app.include_router(complaint_defense_router)
 app.include_router(client_negotiation_router)
+app.include_router(attrition_signal_router)
 
 
 @app.get("/health")
