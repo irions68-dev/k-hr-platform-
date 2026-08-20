@@ -166,12 +166,22 @@
   display: none;
 }
 
+.normal-style body {
+  background-image: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    /* 민트 배경에 세모(빨강)·네모(노랑)·동그라미(초록) 컨페티 - 기본 도형이라
+       저작권 걱정 없이 자유롭게 쓸 수 있다(캐릭터 원화를 따라 그리는 것과는
+       다름). 카드 콘텐츠 위로는 카드 배경색이 덮으므로 실제 읽는 영역은
+       그대로 깨끗하고, "심플하게 보기" 토글로 언제든 끌 수 있다. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cpolygon points='40,20 60,56 20,56' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2'/%3E%3Crect x='150' y='18' width='28' height='28' rx='4' fill='%23F8E3A0' stroke='%23C7A85C' stroke-width='2' transform='rotate(15 164 32)'/%3E%3Ccircle cx='60' cy='130' r='15' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3Cpolygon points='195,110 213,142 177,142' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2' transform='rotate(-10 195 125)'/%3E%3Crect x='25' y='175' width='24' height='24' rx='4' fill='%23F8E3A0' stroke='%23C7A85C' stroke-width='2' transform='rotate(-12 37 187)'/%3E%3Ccircle cx='190' cy='200' r='13' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3Cpolygon points='120,190 136,218 104,218' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2' transform='rotate(6 120 205)'/%3E%3Ccircle cx='120' cy='60' r='11' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: repeat;
   }
   html {
     @apply font-sans;
