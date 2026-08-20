@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function DraftCard({ title, text }: { title: string; text: string }) {
+export function CopyableCard({ title, text }: { title: string; text: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

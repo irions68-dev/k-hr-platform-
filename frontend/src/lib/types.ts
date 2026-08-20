@@ -217,3 +217,18 @@ export interface MessageDraftResult {
   worker_message: string;
   interviewer_memo: string;
 }
+
+export interface WorkLogEntry {
+  id: number;
+  entry_date: string;
+  note: string;
+  created_at: string;
+}
+
+export interface WorkLogReportResult {
+  report: string;
+}
+
+export interface WorkLogExportResult {
+  text: string;
+}

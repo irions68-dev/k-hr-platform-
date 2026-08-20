@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { DraftCard } from "@/components/messages/DraftCard";
+import { CopyableCard } from "@/components/CopyableCard";
 
 const SITUATION_TYPES = ["면접 확정", "계약 갱신", "출근 안내", "기타"];
 
@@ -94,9 +94,9 @@ export default function MessagesPage() {
 
       {result && (
         <>
-          <DraftCard title="고객사용 이메일" text={result.client_email} />
-          <DraftCard title="근로자용 안내 메시지" text={result.worker_message} />
-          <DraftCard title="면접관용 요약 메모" text={result.interviewer_memo} />
+          <CopyableCard title="고객사용 이메일" text={result.client_email} />
+          <CopyableCard title="근로자용 안내 메시지" text={result.worker_message} />
+          <CopyableCard title="면접관용 요약 메모" text={result.interviewer_memo} />
         </>
       )}
     </div>

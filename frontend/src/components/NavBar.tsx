@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/exam", label: "오늘의 기출" },
   { href: "/resume", label: "이력서 추출" },
   { href: "/messages", label: "멘트 메이커" },
+  { href: "/worklog", label: "업무 로그" },
 ];
 
 export default function NavBar() {

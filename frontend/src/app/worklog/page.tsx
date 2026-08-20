@@ -1,0 +1,179 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { apiGet, apiPost, ApiError } from "@/lib/api";
+import type { WorkLogEntry, WorkLogExportResult, WorkLogReportResult } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { CopyableCard } from "@/components/CopyableCard";
+
+function startOfWeek(d: Date): Date {
+  const day = d.getDay(); // 0(일)~6(토)
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diffToMonday);
+  return monday;
+}
+
+function toIsoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function reportErrorMessage(e: unknown): string {
+  if (e instanceof ApiError && e.status === 429) {
+    return "오늘 AI 처리 한도를 다 썼어요. 내일 다시 시도해주세요.";
+  }
+  return "보고서 생성에 실패했어요. 다시 시도해주세요.";
+}
+
+export default function WorkLogPage() {
+  const [note, setNote] = useState("");
+  const [entries, setEntries] = useState<WorkLogEntry[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const [reportLoading, setReportLoading] = useState<"week" | "month" | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportTitle, setReportTitle] = useState<string | null>(null);
+  const [reportText, setReportText] = useState<string | null>(null);
+
+  const [exportText, setExportText] = useState<string | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const loadEntries = () => {
+    apiGet<WorkLogEntry[]>("/work-log/entries")
+      .then((all) => setEntries(all.slice(-20).reverse()))
+      .catch(() => setEntries([]));
+  };
+
+  useEffect(() => {
+    loadEntries();
+  }, []);
+
+  const handleAddNote = async () => {
+    if (!note.trim()) return;
+    setSaving(true);
+    try {
+      await apiPost("/work-log/entries", { note });
+      setNote("");
+      loadEntries();
+    } catch {
+      // 조용히 무시 - 다시 시도하면 됨
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReport = async (range: "week" | "month") => {
+    setReportLoading(range);
+    setReportError(null);
+    setReportText(null);
+
+    const today = new Date();
+    let start: Date;
+    let end: Date;
+    if (range === "week") {
+      start = startOfWeek(today);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      setReportTitle("이번 주 업무 보고서");
+    } else {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      setReportTitle("이번 달 업무 보고서");
+    }
+
+    try {
+      const data = await apiPost<WorkLogReportResult>("/work-log/report", {
+        start_date: toIsoDate(start),
+        end_date: toIsoDate(end),
+      });
+      setReportText(data.report);
+    } catch (e) {
+      setReportError(reportErrorMessage(e));
+    } finally {
+      setReportLoading(null);
+    }
+  };
+
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      const data = await apiGet<WorkLogExportResult>("/work-log/export");
+      setExportText(data.text);
+    } catch {
+      setExportText("내보내기에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold">업무 로그 · 보고서</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          그날그날 대충 적어두면, 필요할 때 "이번 주/이번 달 보고서 만들기"로 격식 있는
+          보고서로 정리해드려요. 메모 저장 자체엔 AI를 안 써요. 재배포 시 데이터가
+          초기화될 수 있으니, 중요한 시점엔 "전체 내보내기"로 수시 백업해두세요.
+        </p>
+      </div>
+
+      <Card>
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="예: A사 이력서 5개 전달, B사 근로자 면담 완료"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
+            />
+            <Button onClick={handleAddNote} disabled={!note.trim() || saving}>
+              기록
+            </Button>
+          </div>
+
+          {entries.length > 0 && (
+            <ul className="flex flex-col gap-1 text-sm">
+              {entries.map((e) => (
+                <li key={e.id} className="flex gap-2">
+                  <span className="shrink-0 text-muted-foreground">{e.entry_date}</span>
+                  <span>{e.note}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => handleReport("week")}
+              disabled={reportLoading !== null}
+            >
+              {reportLoading === "week" ? "작성 중..." : "이번 주 보고서 만들기"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleReport("month")}
+              disabled={reportLoading !== null}
+            >
+              {reportLoading === "month" ? "작성 중..." : "이번 달 보고서 만들기"}
+            </Button>
+            <span className="mx-2 h-6 w-px bg-border" />
+            <Button variant="ghost" onClick={handleExport} disabled={exportLoading}>
+              {exportLoading ? "내보내는 중..." : "전체 내보내기(백업)"}
+            </Button>
+          </div>
+          {reportError && <p className="text-sm text-destructive">{reportError}</p>}
+        </CardContent>
+      </Card>
+
+      {reportText && reportTitle && <CopyableCard title={reportTitle} text={reportText} />}
+      {exportText && <CopyableCard title="전체 업무 로그 (백업용 원본)" text={exportText} />}
+    </div>
+  );
+}
