@@ -74,9 +74,9 @@ export function WellbeingCard() {
 
         <p className="text-sm italic text-muted-foreground">“{data.quote}”</p>
 
-        {achievements.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">오늘의 작은 성취</p>
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">오늘의 작은 성취</p>
+          {achievements.length > 0 ? (
             <ul className="mt-1 flex flex-col gap-0.5">
               {achievements.map((a) => (
                 <li key={a} className="text-sm">
@@ -84,8 +84,12 @@ export function WellbeingCard() {
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              아직 없어요. 상담을 정리하거나 기출문제를 풀면 여기 쌓여요.
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
