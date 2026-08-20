@@ -211,3 +211,9 @@ export interface ResumeExtractResult {
   match_strengths: string[];
   match_concerns: string[];
 }
+
+export interface MessageDraftResult {
+  client_email: string;
+  worker_message: string;
+  interviewer_memo: string;
+}

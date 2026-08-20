@@ -13,6 +13,7 @@ from app.api.calculators import router as calculators_router
 from app.api.cases import router as cases_router
 from app.api.exam import router as exam_router
 from app.api.legal_qa import router as legal_qa_router
+from app.api.message_draft import router as message_draft_router
 from app.api.resume import router as resume_router
 from app.api.risk import router as risk_router
 from app.api.study import router as study_router
@@ -75,6 +76,7 @@ app.include_router(legal_qa_router)
 app.include_router(exam_router)
 app.include_router(wellbeing_router)
 app.include_router(resume_router)
+app.include_router(message_draft_router)
 
 
 @app.get("/health")

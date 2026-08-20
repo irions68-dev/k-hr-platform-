@@ -75,6 +75,7 @@
 - [x] **코드 재점검·모듈화(2026-08-20)** — 감정체크인·이력서추출 추가하며 생긴 중복 정리.
   - 백엔드: `generation.py`(법령Q&A)·`resume_extract.py`(이력서)·`embeddings.py`가 각자 Gemini 클라이언트 생성, 429/미설정 예외, JSON 파싱을 따로 구현하고 있던 걸 `app/engines/gemini_client.py`로 통합(`get_client()`, `generate_structured_json()`, 공용 예외 2종). 모델을 다시 바꿔야 할 때(과거 gemini-2.5→3.5 전환 같은 경우) 한 곳만 고치면 됨. generation.py 92→47줄, resume_extract.py 163→129줄로 축소. 실제 Gemini 호출로 두 경로(법령Q&A 검색+생성, 이력서추출) 전부 재검증 완료, 129개 테스트 전부 통과.
   - 프론트: `resume/page.tsx`(375줄, 상태관리+로직+렌더링이 한 파일에 뒤섞여 있었음)를 `lib/resume.ts`(타입+순수함수)·`components/resume/ScoreBadge.tsx`·`components/resume/ResumeResultCard.tsx`로 분리, `page.tsx`는 상태관리+오케스트레이션만 남기고 140줄로 축소. 빌드·렌더링 결과 변화 없음 확인.
+- [x] **클라이언트 맞춤형 멘트 메이커(`/messages`, 2026-08-20)** — 상황을 짧게 적으면(선택적으로 "면접 확정/계약 갱신/출근 안내/기타" 유형 칩과 함께) 고객사용 격식 이메일·근로자용 카카오톡/문자 안내·면접관용 요약 메모 3종을 한 번의 Gemini 호출로 동시 생성. 문서생성/계약조회(보류)와 달리 이건 "정답이 정해진 일"이 아니라 톤을 상황에 맞게 바꾸는 글쓰기라 LLM이 적합하다고 판단해 진행. **실제 발송 기능은 없음** — 초안만 만들고 복사해서 직접 검토 후 보내는 방식(카카오톡 비즈니스 API 등 실발신 연동은 회사 승인·비용이 드는 별개 프로젝트라 범위에서 제외). "내일", "다음주" 같은 상대적 날짜 표현은 오늘 날짜를 프롬프트에 넣어 실제 날짜(YYYY-MM-DD, 요일)로 환산하도록 처리 — 실제 호출로 "내일 오후 2시"가 정확한 날짜+요일로 변환되는 것 확인. 없는 정보(담당자명, 연락처 등)는 추측 대신 대괄호 placeholder로 남기도록 프롬프트에 명시. `app/engines/message_draft.py`(방금 만든 `gemini_client.py` 재사용), `/messages/draft` API, 프론트 `messages/page.tsx` + `components/messages/DraftCard.tsx`, 테스트 7개.
 
 ## 7. 문서
 - [x] `K_HR_Platform_Design_and_Spec.md` 0~2번 섹션 반영
