@@ -232,3 +232,10 @@ export interface WorkLogReportResult {
 export interface WorkLogExportResult {
   text: string;
 }
+
+export interface ComplianceCheckResult {
+  risk_level: string;
+  risk_summary: string;
+  legal_references: string[];
+  pitch: string;
+}

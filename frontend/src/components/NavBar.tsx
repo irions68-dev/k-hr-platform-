@@ -16,6 +16,7 @@ const LINKS = [
   { href: "/resume", label: "이력서 추출" },
   { href: "/messages", label: "멘트 메이커" },
   { href: "/worklog", label: "업무 로그" },
+  { href: "/compliance", label: "컴플라이언스 진단" },
 ];
 
 export default function NavBar() {
