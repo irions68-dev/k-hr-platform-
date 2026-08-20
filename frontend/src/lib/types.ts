@@ -239,3 +239,10 @@ export interface ComplianceCheckResult {
   legal_references: string[];
   pitch: string;
 }
+
+export interface ComplaintDefenseResult {
+  defense_response: string;
+  legal_basis: string[];
+  legal_basis_explanation: string;
+  caution_note: string;
+}
