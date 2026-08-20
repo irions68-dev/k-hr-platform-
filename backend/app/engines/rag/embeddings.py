@@ -5,15 +5,18 @@
 죽는 걸 실측으로 확인했다(2026-08-02). 이미 생성(generation.py)에 쓰고 있는
 Gemini API의 임베딩 엔드포인트로 교체해서 로컬 모델 자체를 없앴다 - 메모리
 부담이 사라지고 API 키 하나로 생성+검색을 다 처리한다.
+
+클라이언트 생성·미설정 예외는 `gemini_client.py`에 공용으로 모아뒀다. 다만
+임베딩은 코퍼스 적재 시 같은 프로세스 안에서 여러 번 연달아 호출되므로,
+호출마다 클라이언트를 새로 만들지 않도록 여기서만 별도로 캐시한다.
 """
 from __future__ import annotations
-
-import os
 
 from google import genai
 from google.genai import errors, types
 
-from app.engines.rag.generation import GeminiNotConfiguredError, GeminiQuotaExceededError
+from app.engines.gemini_client import GeminiNotConfiguredError, GeminiQuotaExceededError
+from app.engines.gemini_client import get_client as _get_shared_client
 
 MODEL_NAME = "gemini-embedding-001"
 
@@ -23,10 +26,7 @@ _client: genai.Client | None = None
 def _get_client() -> genai.Client:
     global _client
     if _client is None:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise GeminiNotConfiguredError("GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다.")
-        _client = genai.Client(api_key=api_key)
+        _client = _get_shared_client()
     return _client
 
 

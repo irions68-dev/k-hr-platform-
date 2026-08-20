@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from app.engines import resume_extract
+from app.engines import gemini_client, resume_extract
 
 SAMPLE_RESULT = {
     "name": "홍길동",
@@ -53,7 +53,7 @@ class _FakeClient:
 
 def test_extract_resume_returns_parsed_fields(monkeypatch):
     fake_client = _FakeClient(SAMPLE_RESULT)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     result = resume_extract.extract_resume(b"fake-image-bytes", "image/jpeg")
 
@@ -68,7 +68,7 @@ def test_extract_resume_rejects_unsupported_mime_type():
 
 
 def test_extract_resume_rejects_oversized_file(monkeypatch):
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: _FakeClient(SAMPLE_RESULT))
+    monkeypatch.setattr(gemini_client, "get_client", lambda: _FakeClient(SAMPLE_RESULT))
     too_big = b"x" * (resume_extract.MAX_FILE_SIZE_BYTES + 1)
     with pytest.raises(resume_extract.FileTooLargeError):
         resume_extract.extract_resume(too_big, "image/jpeg")
@@ -82,7 +82,7 @@ def test_extract_resume_raises_not_configured_without_api_key(monkeypatch):
 
 def test_resume_api_round_trip(client, monkeypatch):
     fake_client = _FakeClient(SAMPLE_RESULT)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     resp = client.post(
         "/resume/extract",
@@ -104,7 +104,7 @@ def test_resume_api_rejects_unsupported_type(client):
 
 def test_extract_resume_without_job_description_uses_default_prompt(monkeypatch):
     fake_client = _FakeClient(SAMPLE_RESULT)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     resume_extract.extract_resume(b"data", "image/jpeg")
 
@@ -115,7 +115,7 @@ def test_extract_resume_without_job_description_uses_default_prompt(monkeypatch)
 
 def test_extract_resume_includes_job_description_in_prompt(monkeypatch):
     fake_client = _FakeClient(SAMPLE_RESULT)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     resume_extract.extract_resume(
         b"data", "image/jpeg", job_description="지게차 자격증 필수, 물류센터 경력 우대"
@@ -134,7 +134,7 @@ def test_resume_api_returns_match_score_when_job_description_given(client, monke
         "match_concerns": ["창고관리 시스템 경험 언급 없음"],
     }
     fake_client = _FakeClient(scored_result)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     resp = client.post(
         "/resume/extract",
@@ -152,7 +152,7 @@ def test_resume_api_returns_match_score_when_job_description_given(client, monke
 
 def test_resume_api_defaults_match_score_without_job_description(client, monkeypatch):
     fake_client = _FakeClient(SAMPLE_RESULT)
-    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+    monkeypatch.setattr(gemini_client, "get_client", lambda: fake_client)
 
     resp = client.post(
         "/resume/extract",
