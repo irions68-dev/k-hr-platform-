@@ -34,6 +34,14 @@ cd frontend
 npm run build          # out/ 디렉토리 생성 (정적 export)
 npx wrangler pages deploy out --project-name=k-hr-guard
 ```
+
+**⚠️ `.env.local`을 절대 만들지 마세요** — Next.js는 `.env.local`을
+`.env.production`보다 우선시켜서, 로컬 개발 편의로 `.env.local`을 만들어두면
+`npm run build`(프로덕션 빌드)도 그 값을 그대로 써버립니다(2026-08-20 실제로
+이 문제로 로그인이 안 되는 사고 발생 — `.env.local`에 남아있던
+`localhost:8010`이 프로덕션 빌드에 그대로 박혀서 배포됨). 로컬 개발용
+URL은 반드시 `.env.development`에 넣으세요(`next dev`에서만 로드되고
+`next build`에는 영향 없음) — `.env.development.example` 참고.
 이 PC엔 Cloudflare Wrangler CLI가 이미 로그인되어 있어(irions68@gmail.com)
 제가 바로 실행할 수 있습니다. 배포되면 `https://k-hr-guard.pages.dev` 같은
 URL이 나옵니다.
