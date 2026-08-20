@@ -18,6 +18,7 @@ const LINKS = [
   { href: "/worklog", label: "업무 로그" },
   { href: "/compliance", label: "컴플라이언스 진단" },
   { href: "/complaint-defense", label: "민원 방어" },
+  { href: "/client-negotiation", label: "고객사 메일 도우미" },
 ];
 
 export default function NavBar() {

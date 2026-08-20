@@ -246,3 +246,9 @@ export interface ComplaintDefenseResult {
   legal_basis_explanation: string;
   caution_note: string;
 }
+
+export interface ClientNegotiationResult {
+  approach_notes: string;
+  email_draft: string;
+  key_points: string[];
+}
