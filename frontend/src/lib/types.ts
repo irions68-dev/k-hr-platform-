@@ -165,3 +165,15 @@ export interface ExamStats {
   total_correct: number;
   accuracy: number | null;
 }
+
+export type Mood = "great" | "good" | "okay" | "tired" | "stressed";
+
+export interface TodayWellbeing {
+  mood_today: Mood | null;
+  mood_note: string;
+  mood_response: string | null;
+  streak_days: number;
+  quote: string;
+  cases_today: number;
+  exam_new_today: number;
+}

@@ -7,6 +7,7 @@ import type { MorningBrief } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { WellbeingCard } from "@/components/WellbeingCard";
 
 const QUICK_LINKS = [
   { href: "/legal-qa", title: "법령 Q&A", desc: "전화 받으며 바로 물어보기" },
@@ -31,6 +32,8 @@ export default function DashboardPage() {
           근로자 전화 문의에 빠르고 정확하게 답하기 위한 헬프데스크입니다.
         </p>
       </div>
+
+      <WellbeingCard />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {QUICK_LINKS.map((link) => (

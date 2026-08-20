@@ -68,6 +68,7 @@
 - [x] `/calculators` 페이지 — 계산기 12종 카드형 통합
 - [x] FAQ 퀵카드 13개
 - [x] 로그인 게이트(AuthGate)
+- [x] **홈 화면 감정 체크인 + 오늘의 성취 카드(2026-08-05)** — 무거운 상담 업무 사이 잠깐 숨 돌리라고 추가. 이모지 5단계로 하루 기분 1탭 기록(하루 1개, 재클릭 시 덮어씀), 날짜 기준 로테이션되는 위로 문구, 오늘 처리한 상담 케이스 수·새로 학습한 기출문제 수·연속 기록일수를 "오늘의 작은 성취"로 표시. 새 백엔드 로직 없이 기존 `CaseNote`/`ExamQuestionProgress`의 `created_at`만 재사용해서 구현 부담을 최소화(`MoodCheckin` 모델만 신규 추가). `app/engines/wellbeing.py`, `/wellbeing/*` API, 프론트 `WellbeingCard.tsx`, 테스트 8개.
 
 ## 7. 문서
 - [x] `K_HR_Platform_Design_and_Spec.md` 0~2번 섹션 반영

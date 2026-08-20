@@ -16,6 +16,7 @@ from app.api.legal_qa import router as legal_qa_router
 from app.api.risk import router as risk_router
 from app.api.study import router as study_router
 from app.api.tax import router as tax_router
+from app.api.wellbeing import router as wellbeing_router
 from app.core.auth import SharedPasswordAuthMiddleware, warn_if_auth_disabled
 from app.core.db import init_db
 from app.engines.rag import corpus
@@ -71,6 +72,7 @@ app.include_router(brief_router)
 app.include_router(tax_router)
 app.include_router(legal_qa_router)
 app.include_router(exam_router)
+app.include_router(wellbeing_router)
 
 
 @app.get("/health")
