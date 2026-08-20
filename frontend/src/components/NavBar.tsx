@@ -1,10 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Mascot } from "@/components/Mascot";
+
+const STYLE_STORAGE_KEY = "khr-visual-style";
+type VisualStyle = "playful" | "normal";
+
+function applyVisualStyle(style: VisualStyle) {
+  document.documentElement.classList.toggle("normal-style", style === "normal");
+}
 
 const LINKS = [
   { href: "/", label: "홈" },
@@ -26,29 +34,53 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const [style, setStyle] = useState<VisualStyle>("playful");
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(STYLE_STORAGE_KEY);
+    const initial: VisualStyle = stored === "normal" ? "normal" : "playful";
+    setStyle(initial);
+    applyVisualStyle(initial);
+  }, []);
+
+  const toggleStyle = () => {
+    const next: VisualStyle = style === "playful" ? "normal" : "playful";
+    setStyle(next);
+    applyVisualStyle(next);
+    window.localStorage.setItem(STYLE_STORAGE_KEY, next);
+  };
 
   return (
     <nav className="border-b bg-background">
-      <div className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-3">
-        <span className="mr-4 flex shrink-0 items-center gap-1.5 font-semibold text-foreground">
-          <Mascot size={26} />
+      <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3">
+        <span className="mr-2 flex shrink-0 items-center gap-1.5 font-semibold text-foreground">
+          <Mascot size={26} className="mascot-decor" />
           K-HR Guard
         </span>
-        {LINKS.map((link) => {
-          const active = pathname === link.href;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                buttonVariants({ variant: active ? "default" : "ghost", size: "sm" }),
-                "shrink-0"
-              )}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
+        <div className="flex flex-1 items-center gap-1 overflow-x-auto">
+          {LINKS.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  buttonVariants({ variant: active ? "default" : "ghost", size: "sm" }),
+                  "shrink-0"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={toggleStyle}
+          className="shrink-0 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+        >
+          {style === "playful" ? "심플하게 보기" : "꾸밈 보기"}
+        </button>
       </div>
     </nav>
   );
