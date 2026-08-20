@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/", label: "홈" },
+  { href: "/assistant", label: "AI 어시스턴트" },
   { href: "/legal-qa", label: "법령 Q&A" },
   { href: "/calculators", label: "빠른 계산기" },
   { href: "/tax", label: "4대보험 계산" },

@@ -259,3 +259,9 @@ export interface AttritionSignalResult {
   talking_points: string[];
   caution_note: string;
 }
+
+export type AssistantRouteResult =
+  | { category: "complaint_defense"; category_label: string; result: ComplaintDefenseResult }
+  | { category: "compliance_check"; category_label: string; result: ComplianceCheckResult }
+  | { category: "attrition_signal"; category_label: string; result: AttritionSignalResult }
+  | { category: "message_draft"; category_label: string; result: MessageDraftResult };
