@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { CopyableCard } from "@/components/CopyableCard";
+import { MESSAGE_DRAFT_EXAMPLES } from "@/lib/messageDraftExamples";
 
 const SITUATION_TYPES = ["면접 확정", "계약 갱신", "출근 안내", "기타"];
 
@@ -76,7 +77,10 @@ export default function MessagesPage() {
           <div className="flex flex-col gap-1">
             <Label>상황 설명</Label>
             <Textarea
-              placeholder="예: SK하이닉스 프로젝트 면접 일정 안내, 대상자 3명, 날짜는 내일 오후 2시"
+              placeholder={`예: ${
+                (situationType && MESSAGE_DRAFT_EXAMPLES[situationType]?.situation) ||
+                "SK하이닉스 프로젝트 면접 일정 안내, 대상자 3명, 날짜는 내일 오후 2시"
+              }`}
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
               rows={3}
@@ -97,6 +101,27 @@ export default function MessagesPage() {
           <CopyableCard title="고객사용 이메일" text={result.client_email} />
           <CopyableCard title="근로자용 안내 메시지" text={result.worker_message} />
           <CopyableCard title="면접관용 요약 메모" text={result.interviewer_memo} />
+        </>
+      )}
+
+      {!result && situationType && MESSAGE_DRAFT_EXAMPLES[situationType] && (
+        <>
+          <p className="text-sm text-muted-foreground">
+            "{situationType}" 예시예요. 실제 상황을 적고 초안을 만들면 이런 식으로
+            나와요 — 이건 실제로 생성된 게 아니라 미리 준비해둔 예시예요.
+          </p>
+          <CopyableCard
+            title="고객사용 이메일 (예시)"
+            text={MESSAGE_DRAFT_EXAMPLES[situationType].result.client_email}
+          />
+          <CopyableCard
+            title="근로자용 안내 메시지 (예시)"
+            text={MESSAGE_DRAFT_EXAMPLES[situationType].result.worker_message}
+          />
+          <CopyableCard
+            title="면접관용 요약 메모 (예시)"
+            text={MESSAGE_DRAFT_EXAMPLES[situationType].result.interviewer_memo}
+          />
         </>
       )}
     </div>
