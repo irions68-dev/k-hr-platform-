@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { WellbeingCard } from "@/components/WellbeingCard";
+import { Mascot } from "@/components/Mascot";
 
 const QUICK_LINKS = [
   { href: "/legal-qa", title: "법령 Q&A", desc: "전화 받으며 바로 물어보기" },
@@ -26,11 +27,14 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">K-HR Guard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          근로자 전화 문의에 빠르고 정확하게 답하기 위한 헬프데스크입니다.
-        </p>
+      <div className="flex items-center gap-3">
+        <Mascot size={56} />
+        <div>
+          <h1 className="text-2xl font-bold">K-HR Guard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            근로자 전화 문의에 빠르고 정확하게 답하기 위한 헬프데스크입니다.
+          </p>
+        </div>
       </div>
 
       <WellbeingCard />

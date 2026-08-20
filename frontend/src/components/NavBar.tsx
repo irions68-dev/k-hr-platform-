@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Mascot } from "@/components/Mascot";
 
 const LINKS = [
   { href: "/", label: "홈" },
@@ -29,7 +30,10 @@ export default function NavBar() {
   return (
     <nav className="border-b bg-background">
       <div className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-3">
-        <span className="mr-4 shrink-0 font-semibold text-foreground">K-HR Guard</span>
+        <span className="mr-4 flex shrink-0 items-center gap-1.5 font-semibold text-foreground">
+          <Mascot size={26} />
+          K-HR Guard
+        </span>
         {LINKS.map((link) => {
           const active = pathname === link.href;
           return (

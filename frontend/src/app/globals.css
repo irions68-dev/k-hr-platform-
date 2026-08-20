@@ -49,72 +49,74 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* 순백/순검정 대신 민트 틴트를 살짝 섞어서 눈부심·눈피로를 줄인 파스텔 팔레트 */
+  --background: oklch(0.97 0.02 165);
+  --foreground: oklch(0.32 0.025 300);
+  --card: oklch(0.995 0.006 165);
+  --card-foreground: oklch(0.32 0.025 300);
+  --popover: oklch(0.995 0.006 165);
+  --popover-foreground: oklch(0.32 0.025 300);
+  --primary: oklch(0.64 0.14 340);
+  --primary-foreground: oklch(0.99 0.005 340);
+  --secondary: oklch(0.93 0.03 280);
+  --secondary-foreground: oklch(0.35 0.03 280);
+  --muted: oklch(0.95 0.015 300);
+  --muted-foreground: oklch(0.52 0.02 300);
+  --accent: oklch(0.92 0.05 150);
+  --accent-foreground: oklch(0.32 0.035 150);
+  --destructive: oklch(0.62 0.19 25);
+  --border: oklch(0.9 0.015 300);
+  --input: oklch(0.9 0.015 300);
+  --ring: oklch(0.72 0.09 340);
+  --chart-1: oklch(0.75 0.12 340);
+  --chart-2: oklch(0.75 0.1 150);
+  --chart-3: oklch(0.75 0.1 80);
+  --chart-4: oklch(0.7 0.1 250);
+  --chart-5: oklch(0.65 0.12 30);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.97 0.01 300);
+  --sidebar-foreground: oklch(0.32 0.025 300);
+  --sidebar-primary: oklch(0.64 0.14 340);
+  --sidebar-primary-foreground: oklch(0.99 0.005 340);
+  --sidebar-accent: oklch(0.93 0.03 280);
+  --sidebar-accent-foreground: oklch(0.35 0.03 280);
+  --sidebar-border: oklch(0.9 0.015 300);
+  --sidebar-ring: oklch(0.72 0.09 340);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* 순검정 대신 다크 민트-플럼 톤 - 흰 텍스트와 대비가 너무 강하면 그것도 눈피로 원인이라 전경색도 살짝 낮춤 */
+  --background: oklch(0.22 0.02 175);
+  --foreground: oklch(0.92 0.015 300);
+  --card: oklch(0.28 0.02 200);
+  --card-foreground: oklch(0.92 0.015 300);
+  --popover: oklch(0.28 0.02 200);
+  --popover-foreground: oklch(0.92 0.015 300);
+  --primary: oklch(0.74 0.12 340);
+  --primary-foreground: oklch(0.22 0.02 340);
+  --secondary: oklch(0.34 0.03 280);
+  --secondary-foreground: oklch(0.9 0.02 280);
+  --muted: oklch(0.32 0.02 300);
+  --muted-foreground: oklch(0.7 0.02 300);
+  --accent: oklch(0.34 0.04 150);
+  --accent-foreground: oklch(0.88 0.03 150);
+  --destructive: oklch(0.68 0.18 25);
+  --border: oklch(0.92 0.02 300 / 12%);
+  --input: oklch(0.92 0.02 300 / 16%);
+  --ring: oklch(0.62 0.1 340);
+  --chart-1: oklch(0.75 0.12 340);
+  --chart-2: oklch(0.75 0.1 150);
+  --chart-3: oklch(0.75 0.1 80);
+  --chart-4: oklch(0.7 0.1 250);
+  --chart-5: oklch(0.65 0.12 30);
+  --sidebar: oklch(0.27 0.02 300);
+  --sidebar-foreground: oklch(0.92 0.015 300);
+  --sidebar-primary: oklch(0.74 0.12 340);
+  --sidebar-primary-foreground: oklch(0.22 0.02 340);
+  --sidebar-accent: oklch(0.34 0.03 280);
+  --sidebar-accent-foreground: oklch(0.9 0.02 280);
+  --sidebar-border: oklch(0.92 0.02 300 / 12%);
+  --sidebar-ring: oklch(0.62 0.1 340);
 }
 
 @layer base {
@@ -123,6 +125,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* 민트 배경에 세모(빨강)·네모(노랑)·동그라미(초록) 컨페티 - 기본 도형이라
+       저작권 걱정 없이 자유롭게 쓸 수 있다(캐릭터 원화를 따라 그리는 것과는
+       다름). 카드 콘텐츠 위로는 카드 배경색이 덮으므로 실제 읽는 영역은
+       그대로 깨끗하고, 여백에서만 은은하게 보여 눈은 편하게 유지된다. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cpolygon points='40,20 60,56 20,56' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2'/%3E%3Crect x='150' y='18' width='28' height='28' rx='4' fill='%23F8E3A0' stroke='%23C7A85C' stroke-width='2' transform='rotate(15 164 32)'/%3E%3Ccircle cx='60' cy='130' r='15' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3Cpolygon points='195,110 213,142 177,142' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2' transform='rotate(-10 195 125)'/%3E%3Crect x='25' y='175' width='24' height='24' rx='4' fill='%23F8E3A0' stroke='%23C7A85C' stroke-width='2' transform='rotate(-12 37 187)'/%3E%3Ccircle cx='190' cy='200' r='13' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3Cpolygon points='120,190 136,218 104,218' fill='%23F6B8B8' stroke='%23C97F7F' stroke-width='2' transform='rotate(6 120 205)'/%3E%3Ccircle cx='120' cy='60' r='11' fill='%23BFE3C4' stroke='%2385B98D' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: repeat;
   }
   html {
     @apply font-sans;
