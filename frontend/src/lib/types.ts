@@ -207,4 +207,7 @@ export interface ResumeExtractResult {
   desired_salary: string;
   desired_location: string;
   notes: string;
+  match_score: number;
+  match_strengths: string[];
+  match_concerns: string[];
 }

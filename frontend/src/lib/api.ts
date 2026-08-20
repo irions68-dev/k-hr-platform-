@@ -56,10 +56,17 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>(path, { method: "POST", body: JSON.stringify(body) });
 }
 
-export async function apiPostFile<T>(path: string, file: File): Promise<T> {
+export async function apiPostFile<T>(
+  path: string,
+  file: File,
+  fields: Record<string, string> = {}
+): Promise<T> {
   const password = getStoredPassword();
   const formData = new FormData();
   formData.append("file", file);
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value);
+  }
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",

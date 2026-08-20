@@ -32,3 +32,6 @@ class ResumeExtractResult(BaseModel):
     desired_salary: str = ""
     desired_location: str = ""
     notes: str = ""
+    match_score: float = 0
+    match_strengths: list[str] = []
+    match_concerns: list[str] = []

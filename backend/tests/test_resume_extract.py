@@ -22,6 +22,9 @@ SAMPLE_RESULT = {
     "desired_salary": "3000만원",
     "desired_location": "서울/경기",
     "notes": "",
+    "match_score": 0,
+    "match_strengths": [],
+    "match_concerns": [],
 }
 
 
@@ -34,8 +37,10 @@ class _FakeModels:
     def __init__(self, payload: dict, error: Exception | None = None):
         self._payload = payload
         self._error = error
+        self.last_contents: list | None = None
 
     def generate_content(self, model, contents, config):
+        self.last_contents = contents
         if self._error:
             raise self._error
         return _FakeResponse(self._payload)
@@ -95,3 +100,63 @@ def test_resume_api_rejects_unsupported_type(client):
         files={"file": ("resume.doc", b"data", "application/msword")},
     )
     assert resp.status_code == 415
+
+
+def test_extract_resume_without_job_description_uses_default_prompt(monkeypatch):
+    fake_client = _FakeClient(SAMPLE_RESULT)
+    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+
+    resume_extract.extract_resume(b"data", "image/jpeg")
+
+    prompt = fake_client.models.last_contents[-1]
+    assert "고객사 직무조건" not in prompt
+    assert "추출해줘" in prompt
+
+
+def test_extract_resume_includes_job_description_in_prompt(monkeypatch):
+    fake_client = _FakeClient(SAMPLE_RESULT)
+    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+
+    resume_extract.extract_resume(
+        b"data", "image/jpeg", job_description="지게차 자격증 필수, 물류센터 경력 우대"
+    )
+
+    prompt = fake_client.models.last_contents[-1]
+    assert "고객사 직무조건" in prompt
+    assert "지게차 자격증 필수" in prompt
+
+
+def test_resume_api_returns_match_score_when_job_description_given(client, monkeypatch):
+    scored_result = {
+        **SAMPLE_RESULT,
+        "match_score": 82,
+        "match_strengths": ["물류 경력 3.5년", "지게차운전기능사 보유"],
+        "match_concerns": ["창고관리 시스템 경험 언급 없음"],
+    }
+    fake_client = _FakeClient(scored_result)
+    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+
+    resp = client.post(
+        "/resume/extract",
+        data={"job_description": "지게차 자격증 필수, 물류센터 경력 우대"},
+        files={"file": ("resume.jpg", b"fake-bytes", "image/jpeg")},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["match_score"] == 82
+    assert body["match_strengths"] == ["물류 경력 3.5년", "지게차운전기능사 보유"]
+
+    prompt = fake_client.models.last_contents[-1]
+    assert "지게차 자격증 필수" in prompt
+
+
+def test_resume_api_defaults_match_score_without_job_description(client, monkeypatch):
+    fake_client = _FakeClient(SAMPLE_RESULT)
+    monkeypatch.setattr(resume_extract, "_get_client", lambda: fake_client)
+
+    resp = client.post(
+        "/resume/extract",
+        files={"file": ("resume.jpg", b"fake-bytes", "image/jpeg")},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["match_score"] == 0

@@ -26,7 +26,13 @@ SYSTEM_PROMPT = (
     "어떤 필드에도 포함시키지 마라. "
     "career 항목은 최근 경력이 배열의 앞쪽에 오도록 정렬하고, "
     "total_years_experience는 career 항목들의 재직기간을 합산해 추정한 총 경력 연차이다 "
-    "(신입이거나 경력이 없으면 0)."
+    "(신입이거나 경력이 없으면 0). "
+    "사용자 메시지에 [고객사 직무조건]이 포함되어 있으면, 이력서 내용이 그 조건에 "
+    "얼마나 부합하는지 100점 만점으로 채점해서 match_score에 담고, "
+    "match_strengths에는 부합하는 강점을 2~3개, match_concerns에는 우려되는 점이나 "
+    "부족한 부분을 1~2개 짧은 문장으로 담아라(부족한 점이 없으면 빈 배열). "
+    "[고객사 직무조건]이 없으면 match_score는 0, match_strengths와 match_concerns는 "
+    "빈 배열로 남겨라(채점하지 마라)."
 )
 
 RESPONSE_SCHEMA = {
@@ -70,6 +76,9 @@ RESPONSE_SCHEMA = {
         "desired_salary": {"type": "string"},
         "desired_location": {"type": "string"},
         "notes": {"type": "string"},
+        "match_score": {"type": "number"},
+        "match_strengths": {"type": "array", "items": {"type": "string"}},
+        "match_concerns": {"type": "array", "items": {"type": "string"}},
     },
     "required": [
         "name",
@@ -79,6 +88,9 @@ RESPONSE_SCHEMA = {
         "education",
         "career",
         "certifications",
+        "match_score",
+        "match_strengths",
+        "match_concerns",
     ],
 }
 
@@ -106,7 +118,7 @@ def _get_client() -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
-def extract_resume(file_bytes: bytes, mime_type: str) -> dict:
+def extract_resume(file_bytes: bytes, mime_type: str, job_description: str = "") -> dict:
     if mime_type not in ALLOWED_MIME_TYPES:
         raise UnsupportedFileTypeError(
             f"지원하지 않는 파일 형식입니다: {mime_type} "
@@ -117,12 +129,21 @@ def extract_resume(file_bytes: bytes, mime_type: str) -> dict:
 
     client = _get_client()
 
+    job_description = job_description.strip()
+    if job_description:
+        prompt = (
+            f"[고객사 직무조건]\n{job_description}\n\n"
+            "첨부된 이력서에서 정보를 추출하고, 위 직무조건에 얼마나 부합하는지도 평가해줘."
+        )
+    else:
+        prompt = "첨부된 이력서에서 정보를 추출해줘."
+
     try:
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents=[
                 types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
-                "첨부된 이력서에서 정보를 추출해줘.",
+                prompt,
             ],
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
